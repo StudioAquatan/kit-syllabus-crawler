@@ -1,9 +1,9 @@
 import { isRight } from 'fp-ts/lib/Either';
 import { JSDOM } from 'jsdom';
 import {
-  CategoryEntity,
-  ClassPlanEntity,
-  GoalEntity,
+  CategoryObject,
+  ClassPlanObject,
+  GoalObject,
   SubjectEntity,
   SubjectL10nEntity,
   subjectL10nEntity,
@@ -144,8 +144,8 @@ const getPlans = (elem: Element | null) => {
   if (trList.length % 2 !== 0)
     throw new Error('error while parsing plan (count % 2)');
 
-  const ja: ClassPlanEntity[] = [];
-  const en: ClassPlanEntity[] = [];
+  const ja: ClassPlanObject[] = [];
+  const en: ClassPlanObject[] = [];
   for (let i = 0; i < trList.length; i += 2) {
     const elemsJA = [].slice.apply(
       trList[i].querySelectorAll('td'),
@@ -197,8 +197,8 @@ const getGoals = (elem: Element | null) => {
   if (trList.length % 2 !== 0)
     throw new Error('error while parsing goals (evaluation count % 2)');
 
-  const ja: GoalEntity['evaluation'] = [];
-  const en: GoalEntity['evaluation'] = [];
+  const ja: GoalObject['evaluation'] = [];
+  const en: GoalObject['evaluation'] = [];
   for (let i = 0; i < trList.length; i += 2) {
     const labelJA = trList[i].querySelector('th:nth-child(2)')?.firstChild
       ?.textContent;
@@ -220,11 +220,11 @@ const getGoals = (elem: Element | null) => {
     ja: {
       description: jaGoal,
       evaluation: ja,
-    } as GoalEntity,
+    } as GoalObject,
     en: {
       description: enGoal,
       evaluation: en,
-    } as GoalEntity,
+    } as GoalObject,
   };
 };
 
@@ -286,7 +286,7 @@ export const getClassInfo = (elem: Element | null) => {
   if (lens.length !== 1)
     throw new Error('error while parsing class info (no class)');
 
-  const categories: CategoryEntity[] = new Array(lens[0])
+  const categories: CategoryObject[] = new Array(lens[0])
     .fill(0)
     .map((_v, idx) => ({
       available: classificationItems['今年度開講 / Availability'][

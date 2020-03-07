@@ -8,7 +8,7 @@ export const instructorEntityType = t.type({
 
 export type InstructorEntity = t.TypeOf<typeof instructorEntityType>;
 
-export const classPlanEntityType = t.intersection([
+export const classPlanObjectType = t.intersection([
   t.type({
     topic: t.string,
   }),
@@ -17,9 +17,9 @@ export const classPlanEntityType = t.intersection([
   }),
 ]);
 
-export type ClassPlanEntity = t.TypeOf<typeof classPlanEntityType>;
+export type ClassPlanObject = t.TypeOf<typeof classPlanObjectType>;
 
-export const goalEntityType = t.type({
+export const goalObjectType = t.type({
   description: t.string,
   evaluation: t.array(
     t.type({
@@ -29,9 +29,9 @@ export const goalEntityType = t.type({
   ),
 });
 
-export type GoalEntity = t.TypeOf<typeof goalEntityType>;
+export type GoalObject = t.TypeOf<typeof goalObjectType>;
 
-export const categoryEntityType = t.intersection([
+export const categoryObjectType = t.intersection([
   t.partial({
     faculty: t.string,
     field: t.string,
@@ -46,13 +46,13 @@ export const categoryEntityType = t.intersection([
   }),
 ]);
 
-export type CategoryEntity = t.TypeOf<typeof categoryEntityType>;
+export type CategoryObject = t.TypeOf<typeof categoryObjectType>;
 
 export const subjectEntityType = t.exact(
   t.intersection([
     t.type({
       id: NonNaNNumber,
-      categories: t.array(categoryEntityType),
+      categories: t.array(categoryObjectType),
       title: t.string,
       instructors: t.array(instructorEntityType),
       flags: t.array(
@@ -69,7 +69,7 @@ export const subjectEntityType = t.exact(
       ),
       outline: t.string,
       purpose: t.string,
-      plans: t.array(classPlanEntityType),
+      plans: t.array(classPlanObjectType),
       requirements: t.string,
       point: t.string,
       textbooks: t.string,
@@ -84,7 +84,7 @@ export const subjectEntityType = t.exact(
       type: t.string,
       code: t.string,
       class: t.string,
-      goal: goalEntityType,
+      goal: goalObjectType,
     }),
   ]),
 );
