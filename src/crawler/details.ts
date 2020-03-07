@@ -1,13 +1,14 @@
 import { isRight } from 'fp-ts/lib/Either';
 import { JSDOM } from 'jsdom';
-import fetch from 'node-fetch';
 import {
+  CategoryEntity,
   ClassPlanEntity,
   GoalEntity,
   SubjectEntity,
   SubjectL10nEntity,
   subjectL10nEntity,
 } from '../entities/subject';
+import { fetchWithCache } from '../utils/cached-http';
 
 const flagNameTable: Record<string, SubjectEntity['flags'][0]> = {
   Internship: 'internship',
@@ -76,28 +77,34 @@ const getBaseInfo = (elem: Element | null) => {
     instructorsElem?.childElementCount === 0
       ? [
           {
-            id: 'not-set',
+            id: null,
             name: instructorsElem.textContent || 'unknown',
           },
         ] // 「某/undecided」のとき
       : ([].slice.apply(
           instructorsElem?.querySelectorAll('a') || [],
-        ) as HTMLAnchorElement[]).map(item => ({
-          id: item.href.match(/ja\.([a-f0-9]+)\.html/) ? RegExp.$1 : 'unknown',
-          name: item.textContent || 'unknown',
-        })); // その他はすべてリンク(?)
+        ) as HTMLAnchorElement[])
+          .map(item => ({
+            id: item.href.match(/ja\.([a-f0-9]+)\.html/) ? RegExp.$1 : null,
+            name: item.textContent || 'unknown',
+          }))
+          .filter(item => item.name !== '他'); // その他はすべてリンク(?)
   const instructorNamesEN =
     instructorsElem?.parentElement?.nextElementSibling
       ?.querySelector('td')
       ?.textContent?.split(/、/g) || []; // 担当教員のtdの親のtrの次のtr
 
-  if (instructorsJA.length !== instructorNamesEN.length)
-    throw new Error('error while parsing instructors');
-
-  const instructorsEN = instructorNamesEN.map((name, idx) => ({
-    ...instructorsJA[idx],
-    name,
-  }));
+  const instructorsEN = instructorNamesEN.map((name, idx) =>
+    instructorsJA[idx]
+      ? {
+          ...instructorsJA[idx],
+          name,
+        }
+      : {
+          id: null,
+          name,
+        },
+  );
 
   const flagsElem = baseInfoElems.find(item =>
     item.textContent?.includes('その他'),
@@ -143,13 +150,17 @@ const getPlans = (elem: Element | null) => {
     const elemsJA = [].slice.apply(
       trList[i].querySelectorAll('td'),
     ) as Element[];
-    ja.push({
-      topic: replaceEmptyText(elemsJA[0].textContent || ''),
-      content: replaceEmptyText(elemsJA[1].textContent || ''),
-    });
     const elemsEN = [].slice.apply(
       trList[i + 1].querySelectorAll('td'),
     ) as Element[];
+    ja.push({
+      topic:
+        replaceEmptyText(elemsJA[0].textContent || '') ||
+        replaceEmptyText(elemsEN[0].textContent || ''),
+      content:
+        replaceEmptyText(elemsJA[1].textContent || '') ||
+        replaceEmptyText(elemsEN[1].textContent || ''),
+    });
     en.push({
       topic:
         replaceEmptyText(elemsEN[0].textContent || '') ||
@@ -161,8 +172,8 @@ const getPlans = (elem: Element | null) => {
   }
 
   return {
-    ja,
-    en,
+    ja: ja.filter(({ topic, content }) => topic && content),
+    en: en.filter(({ topic, content }) => topic && content),
   };
 };
 
@@ -194,14 +205,14 @@ const getGoals = (elem: Element | null) => {
     const resultElemJA = trList[i].querySelector('td');
     ja.push({
       label: replaceEmptyText(labelJA || ''),
-      description: replaceEmptyText(resultElemJA?.textContent || ''),
+      description: replaceEmptyText(resultElemJA?.textContent || '') || null,
     });
     const labelEN = trList[i].querySelector('th:nth-child(2)')?.lastChild
       ?.textContent;
     const resultElemEN = trList[i + 1].querySelector('td');
     en.push({
       label: replaceEmptyText(labelEN || ''),
-      description: replaceEmptyText(resultElemEN?.textContent || ''),
+      description: replaceEmptyText(resultElemEN?.textContent || '') || null,
     });
   }
 
@@ -217,26 +228,34 @@ const getGoals = (elem: Element | null) => {
   };
 };
 
-export const fetchSubject = async (subjectCode: number) => {
-  const res = await fetch(
-    `https://www.syllabus.kit.ac.jp/?c=detail&schedule_code=${subjectCode}`,
-    {
-      headers: {
-        Referer: 'https://www.syllabus.kit.ac.jp/?c=search_list&sk=99',
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36',
-        'Accept-Language': 'ja,en;q=0.9,en-US;q=0.8,ga;q=0.7',
-      },
-    },
-  );
-  if (!res.ok) throw new Error('failed');
+export const getClassInfo = (elem: Element | null) => {
+  if (!elem) throw new Error('no class info');
 
-  const dom = new JSDOM(await res.text());
+  const flags: SubjectEntity['flags'] = [];
+  if (
+    !!elem.querySelector(
+      'img[src="https://www.syllabus.kit.ac.jp/img/notes_icon1.png"]',
+    )
+  ) {
+    flags.push('3univ');
+  }
+  if (
+    !!elem.querySelector(
+      'img[src="https://www.syllabus.kit.ac.jp/img/notes_icon2.png"]',
+    )
+  ) {
+    flags.push('kyoto');
+  }
+  if (
+    !!elem.querySelector(
+      'img[src="https://www.syllabus.kit.ac.jp/img/notes_icon3.png"]',
+    )
+  ) {
+    flags.push('lottery');
+  }
 
   const classificationItems = ([].slice.apply(
-    dom.window.document
-      .querySelector('#classification_tbl')
-      ?.querySelectorAll('th') || [],
+    elem.querySelectorAll('th') || [],
   ) as Element[])
     .filter(
       item =>
@@ -244,18 +263,74 @@ export const fetchSubject = async (subjectCode: number) => {
         item.nextElementSibling?.tagName === 'TD' &&
         item.nextElementSibling.textContent?.length,
     )
-    .reduce<Record<string, string[]>>((obj, item) => {
+    .reduce<Record<string, Array<{ ja: string; en: string }>>>((obj, item) => {
+      const [ja, en] = item
+        .nextElementSibling!.textContent!.split('/')
+        .map(str => replaceEmptyText(str.trim()));
+
       return {
         ...obj,
-        [item.textContent!.trim()]: item
-          .nextElementSibling!.textContent!.split('/')
-          .map(str => str.trim())
-          .filter(str => str !== '-'),
+        [item.textContent!.trim()]: [
+          ...(obj[item.textContent!.trim()] || []),
+          { ja, en: en || ja },
+        ],
       };
     }, {});
 
+  const lens = Object.values(classificationItems)
+    .map(arr => arr.length)
+    .reduce<number[]>(
+      (arr, len) => (arr.includes(len) ? arr : [...arr, len]),
+      [],
+    );
+  if (lens.length !== 1)
+    throw new Error('error while parsing class info (no class)');
+
+  const categories: CategoryEntity[] = new Array(lens[0])
+    .fill(0)
+    .map((_v, idx) => ({
+      available: classificationItems['今年度開講 / Availability'][
+        idx
+      ].ja.includes('有'),
+      year: classificationItems['年次 / Year'][idx].ja,
+      semester: classificationItems['学期 / Semester'][idx].ja,
+      faculty: classificationItems['学部等 / Faculty'][idx].ja,
+      field: classificationItems['学域等 / Field'][idx].ja,
+      program: classificationItems['課程等 / Program'][idx].ja,
+      category: classificationItems['分類 / Category'][idx].ja,
+      day: classificationItems['曜日時限 / Day & Period'][idx].ja,
+    }));
+
+  const categoriesEN = categories.map((item, idx) => ({
+    ...item,
+    year: classificationItems['年次 / Year'][idx].en,
+    semester: classificationItems['学期 / Semester'][idx].en,
+    faculty: classificationItems['学部等 / Faculty'][idx].en,
+    field: classificationItems['学域等 / Field'][idx].en,
+    program: classificationItems['課程等 / Program'][idx].en,
+    category: classificationItems['分類 / Category'][idx].en,
+    day: classificationItems['曜日時限 / Day & Period'][idx].en,
+  }));
+
+  return {
+    flags,
+    categoriesEN,
+    categories,
+  };
+};
+export const fetchSubject = async (primaryKey: number) => {
+  const res = await fetchWithCache(
+    `https://www.syllabus.kit.ac.jp/?c=detail&pk=${primaryKey}`,
+  );
+
+  const dom = new JSDOM(res);
+
   const { baseInfoItems, flags, instructorsEN, instructorsJA } = getBaseInfo(
     dom.window.document.querySelector('#base_info_tbl'),
+  );
+
+  const { flags: additionalFlags, categories, categoriesEN } = getClassInfo(
+    dom.window.document.querySelector('#classification_tbl'),
   );
 
   const outline = getTwoLangTable(
@@ -279,38 +354,48 @@ export const fetchSubject = async (subjectCode: number) => {
   const remark = getTwoLangTable(
     dom.window.document.querySelector('#recital_tbl'),
   );
+  const researchPlan = getTwoLangTable(
+    dom.window.document.querySelector('#investigation_aegis_tbl'),
+  );
   const plans = getPlans(dom.window.document.querySelector('#plan_tbl'));
   const goals = getGoals(dom.window.document.querySelector('#evaluation_tbl'));
 
   const jaEntity: SubjectEntity = {
     // common
-    id: subjectCode,
-    courseId: Number(baseInfoItems['科目番号 / Course Number'][0]),
-    credits: Number(baseInfoItems['単位数 / Credits'][0]),
-    available: classificationItems['今年度開講 / Availability'][0].includes(
-      '有',
-    ),
-    code: baseInfoItems['科目ナンバリング / Numbering Code'][0],
-    flags,
+    id: primaryKey,
+    timetableId: baseInfoItems['時間割番号 / Timetable Number']
+      ? Number(baseInfoItems['時間割番号 / Timetable Number'][0] || 0) ||
+        undefined
+      : undefined,
+    courseId: baseInfoItems['科目番号 / Course Number']
+      ? Number(baseInfoItems['科目番号 / Course Number'][0] || 0) || undefined
+      : undefined,
+    credits: baseInfoItems['単位数 / Credits']
+      ? Number(baseInfoItems['単位数 / Credits'][0] || 0) || undefined
+      : undefined,
+    code: baseInfoItems['科目ナンバリング / Numbering Code'][0] || undefined,
+    flags: [...flags, ...additionalFlags],
     // dep on lang
-    year: classificationItems['年次 / Year'][0],
-    semester: classificationItems['学期 / Semester'][0],
-    faculty: classificationItems['学部等 / Faculty'][0],
-    field: classificationItems['学域等 / Field'][0],
-    program: classificationItems['課程等 / Program'][0],
-    category: classificationItems['分類 / Category'][0],
-    day: classificationItems['曜日時限 / Day & Period'][0],
-    type: baseInfoItems['授業形態 / Course Type'][0],
-    class: baseInfoItems['クラス / Class'][0],
-    title: baseInfoItems['授業科目名 / Course Title'][0],
+    categories,
+    type: baseInfoItems['授業形態 / Course Type']
+      ? baseInfoItems['授業形態 / Course Type'][0] || undefined
+      : undefined,
+    class: baseInfoItems['クラス / Class']
+      ? baseInfoItems['クラス / Class'][0] || undefined
+      : undefined,
+    title:
+      baseInfoItems['授業科目名 / Course Title'][0] ||
+      baseInfoItems['授業科目名 / Course Title'][1],
     instructors: instructorsJA,
-    outline: outline[0],
-    purpose: purpose[0],
-    requirements: require[0],
-    point: point[0],
-    textbooks: textbook[0],
-    gradingPolicy: policy[0],
-    remarks: remark[0],
+    outline: outline[0].length === 0 ? outline[1] : outline[0],
+    purpose: purpose[0].length === 0 ? purpose[1] : purpose[0],
+    requirements: require[0].length === 0 ? require[1] : require[0],
+    point: point[0].length === 0 ? point[1] : point[0],
+    textbooks: textbook[0].length === 0 ? textbook[1] : textbook[0],
+    gradingPolicy: policy[0].length === 0 ? policy[1] : policy[0],
+    remarks: remark[0].length === 0 ? remark[1] : remark[0],
+    researchPlan:
+      researchPlan[0].length === 0 ? researchPlan[1] : researchPlan[0],
     plans: plans.ja,
     goal: goals.ja || undefined,
   };
@@ -319,16 +404,16 @@ export const fetchSubject = async (subjectCode: number) => {
     ja: jaEntity,
     en: {
       ...jaEntity,
-      year: classificationItems['年次 / Year'][1],
-      semester: classificationItems['学期 / Semester'][1],
-      faculty: classificationItems['学部等 / Faculty'][1],
-      field: classificationItems['学域等 / Field'][1],
-      program: classificationItems['課程等 / Program'][1],
-      category: classificationItems['分類 / Category'][1],
-      day: classificationItems['曜日時限 / Day & Period'][1],
-      type: baseInfoItems['授業形態 / Course Type'][1],
-      class: baseInfoItems['クラス / Class'][1],
-      title: baseInfoItems['授業科目名 / Course Title'][1],
+      categories: categoriesEN,
+      type: baseInfoItems['授業形態 / Course Type']
+        ? baseInfoItems['授業形態 / Course Type'][1] || undefined
+        : undefined,
+      class: baseInfoItems['クラス / Class']
+        ? baseInfoItems['クラス / Class'][1] || undefined
+        : undefined,
+      title:
+        baseInfoItems['授業科目名 / Course Title'][1] ||
+        baseInfoItems['授業科目名 / Course Title'][0],
       instructors: instructorsEN,
       outline: outline[1].length === 0 ? outline[0] : outline[1],
       purpose: purpose[1].length === 0 ? purpose[0] : purpose[1],
@@ -337,6 +422,8 @@ export const fetchSubject = async (subjectCode: number) => {
       textbooks: textbook[1].length === 0 ? textbook[0] : textbook[1],
       gradingPolicy: policy[1].length === 0 ? policy[0] : policy[1],
       remarks: remark[1].length === 0 ? remark[0] : remark[1],
+      researchPlan:
+        researchPlan[1].length === 0 ? researchPlan[0] : researchPlan[1],
       plans: plans.en,
       goal: goals.en || undefined,
     },

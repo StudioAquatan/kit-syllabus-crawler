@@ -1,26 +1,19 @@
 import { isLeft, isRight } from 'fp-ts/lib/Either';
 import { JSDOM } from 'jsdom';
-import fetch from 'node-fetch';
 import {
   subjectL10nSimpleEntity,
   SubjectL10nSimpleEntity,
 } from '../entities/subject';
+import { fetchWithCache } from '../utils/cached-http';
+
+const replaceEmptyText = (str: string) => (str === '-' ? '' : str);
 
 export const fetchSubjectList = async (page: number) => {
-  const res = await fetch(
+  const res = await fetchWithCache(
     `https://www.syllabus.kit.ac.jp/?c=search_list&sk=99&page=${page}`,
-    {
-      headers: {
-        Referer: 'https://www.syllabus.kit.ac.jp/?c=search_list&sk=99',
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36',
-        'Accept-Language': 'ja,en;q=0.9,en-US;q=0.8,ga;q=0.7',
-      },
-    },
   );
-  if (!res.ok) throw new Error('failed');
 
-  const dom = new JSDOM(await res.text());
+  const dom = new JSDOM(res);
 
   const hasPrevious = !!dom.window.document.querySelector(
     `[href="?c=search_list&sk=99&page=${page - 1}"]`,
@@ -29,33 +22,44 @@ export const fetchSubjectList = async (page: number) => {
     `[href="?c=search_list&sk=99&page=${page + 1}"]`,
   );
 
-  const dataListTbl = dom.window.document.querySelector(
-    '#search_result_area .data_list_tbl > tbody',
-  );
-  if (!dataListTbl) throw new Error('no data');
-
   const dataListItems: Element[] = [].slice.apply(
-    dataListTbl.querySelectorAll('tr:not(:first-child)'),
+    dom.window.document.querySelectorAll(
+      '.data_list_tbl > tbody tr:not(:first-child)',
+    ),
   );
 
   const items = dataListItems
     .filter(tr => !!tr.querySelector('td'))
-    .map(tr => ({
-      ja: {
-        id: Number(tr.children.item(0)?.textContent),
+    .map(tr => {
+      const base = {
+        id: Number(
+          tr.children
+            .item(1)
+            ?.querySelector('form')
+            ?.getAttribute('action')
+            ?.match(/pk=(\d+)/)
+            ? RegExp.$1
+            : -1,
+        ),
+        timetableId: Number(
+          replaceEmptyText(tr.children.item(0)?.textContent || '') || -1,
+        ),
         title: tr.children.item(1)?.querySelector('a')?.firstChild?.textContent,
         class: tr.children.item(2)?.firstChild?.textContent,
         type: tr.children.item(3)?.firstChild?.textContent,
         credits: Number(tr.children.item(4)?.textContent),
-      },
-      en: {
-        id: Number(tr.children.item(0)?.textContent),
-        title: tr.children.item(1)?.querySelector('a')?.lastChild?.textContent,
-        class: tr.children.item(2)?.lastChild?.textContent,
-        type: tr.children.item(3)?.lastChild?.textContent,
-        credits: Number(tr.children.item(4)?.textContent),
-      },
-    }))
+      };
+      return {
+        ja: base,
+        en: {
+          ...base,
+          title: tr.children.item(1)?.querySelector('a')?.lastChild
+            ?.textContent,
+          class: tr.children.item(2)?.lastChild?.textContent,
+          type: tr.children.item(3)?.lastChild?.textContent,
+        },
+      };
+    })
     .map(item => subjectL10nSimpleEntity.decode(item));
 
   if (items.some(item => isLeft(item))) throw new Error('invalid page');
@@ -69,8 +73,8 @@ export const fetchSubjectList = async (page: number) => {
   };
 };
 
-export const fetchSubjects = async function*() {
-  for (let page = 1; ; page++) {
+export const fetchSubjects = async function*(begin = 1) {
+  for (let page = begin; ; page++) {
     const result = await fetchSubjectList(page);
     for (const item of result.items) {
       yield item;

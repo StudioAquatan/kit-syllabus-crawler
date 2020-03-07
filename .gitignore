@@ -5,3 +5,4 @@ coverage/
 .env
 cookies.txt
 graphql-generated.ts
+cache

@@ -1,7 +1,8 @@
 import * as t from 'io-ts';
+import { NonNaNNumber } from '../utils/io-types';
 
 export const instructorEntityType = t.type({
-  id: t.string,
+  id: t.union([t.string, t.null]),
   name: t.string,
 });
 
@@ -23,23 +24,35 @@ export const goalEntityType = t.type({
   evaluation: t.array(
     t.type({
       label: t.string,
-      description: t.string,
+      description: t.union([t.string, t.null]),
     }),
   ),
 });
 
 export type GoalEntity = t.TypeOf<typeof goalEntityType>;
 
+export const categoryEntityType = t.intersection([
+  t.partial({
+    faculty: t.string,
+    field: t.string,
+    program: t.string,
+    category: t.string,
+    day: t.string,
+  }),
+  t.type({
+    semester: t.string,
+    available: t.boolean,
+    year: t.string,
+  }),
+]);
+
+export type CategoryEntity = t.TypeOf<typeof categoryEntityType>;
+
 export const subjectEntityType = t.exact(
   t.intersection([
     t.type({
-      id: t.number,
-      courseId: t.number,
-      available: t.boolean,
-      year: t.string,
-      day: t.string,
-      credits: t.number,
-      type: t.string,
+      id: NonNaNNumber,
+      categories: t.array(categoryEntityType),
       title: t.string,
       instructors: t.array(instructorEntityType),
       flags: t.array(
@@ -49,9 +62,11 @@ export const subjectEntityType = t.exact(
           t.literal('al'),
           t.literal('pbl'),
           t.literal('pt'),
+          t.literal('3univ'),
+          t.literal('kyoto'),
+          t.literal('lottery'),
         ]),
       ),
-      code: t.string,
       outline: t.string,
       purpose: t.string,
       plans: t.array(classPlanEntityType),
@@ -60,13 +75,14 @@ export const subjectEntityType = t.exact(
       textbooks: t.string,
       gradingPolicy: t.string,
       remarks: t.string,
+      researchPlan: t.string,
     }),
     t.partial({
-      faculty: t.string,
-      field: t.string,
-      program: t.string,
-      category: t.string,
-      semester: t.string,
+      timetableId: NonNaNNumber,
+      courseId: NonNaNNumber,
+      credits: NonNaNNumber,
+      type: t.string,
+      code: t.string,
       class: t.string,
       goal: goalEntityType,
     }),
@@ -84,10 +100,11 @@ export type SubjectL10nEntity = t.TypeOf<typeof subjectL10nEntity>;
 export const subjectSimpleEntityType = t.exact(
   t.intersection([
     t.type({
-      id: t.number,
+      id: NonNaNNumber,
+      timetableId: NonNaNNumber,
       title: t.string,
       type: t.string,
-      credits: t.number,
+      credits: NonNaNNumber,
     }),
     t.partial({
       class: t.string,
