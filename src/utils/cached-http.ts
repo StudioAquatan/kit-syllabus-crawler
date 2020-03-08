@@ -1,7 +1,6 @@
 import { createHash } from 'crypto';
 import { existsSync, promises as fs } from 'fs';
 import fetch from 'node-fetch';
-import { sleep } from './sleep';
 
 export const fetchWithCache = async (url: string) => {
   const hash = createHash('sha256')
@@ -13,8 +12,6 @@ export const fetchWithCache = async (url: string) => {
   if (existsSync(cacheFile)) {
     return await fs.readFile(cacheFile, { encoding: 'utf8' });
   }
-
-  await sleep(2.5 * 1000); // TODO
 
   const res = await fetch(url, {
     headers: {

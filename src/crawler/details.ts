@@ -7,7 +7,7 @@ import {
   SubjectEntity,
   SubjectL10nEntity,
   subjectL10nEntity,
-} from '../entities/subject';
+} from '../types/subject-io';
 import { fetchWithCache } from '../utils/cached-http';
 
 const flagNameTable: Record<string, SubjectEntity['flags'][0]> = {

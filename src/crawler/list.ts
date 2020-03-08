@@ -3,7 +3,7 @@ import { JSDOM } from 'jsdom';
 import {
   subjectL10nSimpleEntity,
   SubjectL10nSimpleEntity,
-} from '../entities/subject';
+} from '../types/subject-io';
 import { fetchWithCache } from '../utils/cached-http';
 
 const replaceEmptyText = (str: string) => (str === '-' ? '' : str);
