@@ -318,6 +318,19 @@ export const getClassInfo = (elem: Element | null) => {
     categories,
   };
 };
+
+const getAttachments = (elem: Element | null) => {
+  if (!elem) return;
+
+  return ([].slice.apply(elem.querySelectorAll('tr')) as Element[])
+    .filter(item => !!item.querySelector('span'))
+    .map(item => ({
+      filename: item.querySelector('span')?.textContent || '',
+      fileKey: item.querySelector('button')?.value || '',
+    }))
+    .filter(item => item.filename && item.fileKey);
+};
+
 export const fetchSubject = async (primaryKey: number) => {
   const res = await fetchWithCache(
     `https://www.syllabus.kit.ac.jp/?c=detail&pk=${primaryKey}`,
@@ -359,6 +372,9 @@ export const fetchSubject = async (primaryKey: number) => {
   );
   const plans = getPlans(dom.window.document.querySelector('#plan_tbl'));
   const goals = getGoals(dom.window.document.querySelector('#evaluation_tbl'));
+  const attachments = getAttachments(
+    dom.window.document.querySelector('#tempfile_tbl'),
+  );
 
   const jaEntity: SubjectEntity = {
     // common
@@ -398,6 +414,7 @@ export const fetchSubject = async (primaryKey: number) => {
       researchPlan[0].length === 0 ? researchPlan[1] : researchPlan[0],
     plans: plans.ja,
     goal: goals.ja || undefined,
+    attachments,
   };
 
   const entity: SubjectL10nEntity = {

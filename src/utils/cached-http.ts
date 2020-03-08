@@ -14,7 +14,7 @@ export const fetchWithCache = async (url: string) => {
     return await fs.readFile(cacheFile, { encoding: 'utf8' });
   }
 
-  await sleep(2.5 * 1000);
+  await sleep(2.5 * 1000); // TODO
 
   const res = await fetch(url, {
     headers: {

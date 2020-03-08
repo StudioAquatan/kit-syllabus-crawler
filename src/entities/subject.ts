@@ -48,6 +48,13 @@ export const categoryObjectType = t.intersection([
 
 export type CategoryObject = t.TypeOf<typeof categoryObjectType>;
 
+export const attachmentObjectType = t.strict({
+  filename: t.string,
+  fileKey: t.string,
+});
+
+export type AttachmentObject = t.TypeOf<typeof attachmentObjectType>;
+
 export const subjectEntityType = t.exact(
   t.intersection([
     t.type({
@@ -85,6 +92,7 @@ export const subjectEntityType = t.exact(
       code: t.string,
       class: t.string,
       goal: goalObjectType,
+      attachments: t.array(attachmentObjectType),
     }),
   ]),
 );
