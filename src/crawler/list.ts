@@ -8,9 +8,9 @@ import { fetchWithCache } from '../utils/cached-http';
 
 const replaceEmptyText = (str: string) => (str === '-' ? '' : str);
 
-export const fetchSubjectList = async (page: number) => {
+export const fetchSubjectList = async (page: number, sk: number) => {
   const res = await fetchWithCache(
-    `https://www.syllabus.kit.ac.jp/?c=search_list&sk=99&page=${page}`,
+    `https://www.syllabus.kit.ac.jp/?c=search_list&sk=${sk}&page=${page}`,
   );
 
   const dom = new JSDOM(res);
@@ -73,9 +73,9 @@ export const fetchSubjectList = async (page: number) => {
   };
 };
 
-export const fetchSubjects = async function*(begin = 1) {
+export const fetchSubjects = async function*(begin = 1, sk = 99) {
   for (let page = begin; ; page++) {
-    const result = await fetchSubjectList(page);
+    const result = await fetchSubjectList(page, sk);
     for (const item of result.items) {
       yield item;
     }
