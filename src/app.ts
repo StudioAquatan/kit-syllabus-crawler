@@ -8,16 +8,20 @@ import { fetchSubjects } from './crawler/list';
     console.log('fetch', subject.ja.id, subject.ja.title);
     const subjectDetails = await fetchSubject(subject.ja.id);
     await fs.promises.appendFile(
-      'gakubu.json',
+      'gakubu_ja.json',
       JSON.stringify({
-        ja: {
-          ...subjectDetails.ja,
-          category: subject.ja.category.slice(1),
-        },
-        en: {
-          ...subjectDetails.en,
-          category: subject.en.category.slice(1),
-        },
+        ...subjectDetails.ja,
+        category: subject.ja.category.slice(1),
+      }) + '\n',
+      {
+        encoding: 'utf8',
+      },
+    );
+    await fs.promises.appendFile(
+      'gakubu_en.json',
+      JSON.stringify({
+        ...subjectDetails.en,
+        category: subject.en.category.slice(1),
       }) + '\n',
       {
         encoding: 'utf8',

@@ -6,3 +6,4 @@ coverage/
 cookies.txt
 graphql-generated.ts
 cache
+*.json
