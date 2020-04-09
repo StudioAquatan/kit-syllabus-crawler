@@ -37,12 +37,21 @@ export const categoryObjectType = t.intersection([
     field: t.string,
     program: t.string,
     category: t.string,
-    day: t.string,
   }),
   t.type({
     semester: t.string,
     available: t.boolean,
-    year: t.string,
+    year: t.array(t.number),
+    day: t.intersection([
+      t.type({
+        type: t.union([
+          t.literal('inten'),
+          t.literal('fixed'),
+          t.literal('noset'),
+        ]),
+      }),
+      t.partial({ days: t.array(t.tuple([t.number, t.number])) }),
+    ]),
   }),
 ]);
 
@@ -113,6 +122,7 @@ export const subjectSimpleEntityType = t.exact(
       title: t.string,
       type: t.string,
       credits: NonNaNNumber,
+      category: t.array(t.string),
     }),
     t.partial({
       class: t.string,

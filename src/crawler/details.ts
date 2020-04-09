@@ -9,6 +9,7 @@ import {
   subjectL10nEntity,
 } from '../types/subject-io';
 import { fetchWithCache } from '../utils/cached-http';
+import { parseDay, parseYear } from '../utils/time';
 
 const flagNameTable: Record<string, SubjectEntity['flags'][0]> = {
   Internship: 'internship',
@@ -292,24 +293,23 @@ export const getClassInfo = (elem: Element | null) => {
       available: classificationItems['今年度開講 / Availability'][
         idx
       ].ja.includes('有'),
-      year: classificationItems['年次 / Year'][idx].ja,
+      year: parseYear(classificationItems['年次 / Year'][idx].ja),
       semester: classificationItems['学期 / Semester'][idx].ja,
       faculty: classificationItems['学部等 / Faculty'][idx].ja,
       field: classificationItems['学域等 / Field'][idx].ja,
       program: classificationItems['課程等 / Program'][idx].ja,
       category: classificationItems['分類 / Category'][idx].ja,
-      day: classificationItems['曜日時限 / Day & Period'][idx].ja,
+      day: parseDay(classificationItems['曜日時限 / Day & Period'][idx].ja),
     }));
 
   const categoriesEN = categories.map((item, idx) => ({
     ...item,
-    year: classificationItems['年次 / Year'][idx].en,
+    ...categories[idx],
     semester: classificationItems['学期 / Semester'][idx].en,
     faculty: classificationItems['学部等 / Faculty'][idx].en,
     field: classificationItems['学域等 / Field'][idx].en,
     program: classificationItems['課程等 / Program'][idx].en,
     category: classificationItems['分類 / Category'][idx].en,
-    day: classificationItems['曜日時限 / Day & Period'][idx].en,
   }));
 
   return {
