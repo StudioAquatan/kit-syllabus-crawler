@@ -22,7 +22,9 @@ export const parseDay = (day: string) => {
             const d = '月火水木金土'.indexOf(RegExp.$1);
             const h1 = Number(RegExp.$2);
             const h2 = Number(RegExp.$3);
-            return new Array(h2 - h1).fill(0).map((_v, idx) => [d, h1 + idx]);
+            return new Array(h2 - h1 + 1)
+              .fill(0)
+              .map((_v, idx) => [d, h1 + idx]);
           } else if (str.match(/^([月火水木金土])(\d)$/)) {
             const d = '月火水木金土'.indexOf(RegExp.$1);
             const h = Number(RegExp.$2);
@@ -43,7 +45,7 @@ export const parseYear = (year: string) => {
     if (y1 < 1) throw new Error('unknown format of year');
     if (y2 < 1) throw new Error('unknown format of year');
 
-    return new Array(y2 - y1).fill(0).map((_v, idx) => y1 + idx);
+    return new Array(y2 - y1 + 1).fill(0).map((_v, idx) => y1 + idx);
   } else if (year.match(/^([１２３４])年次$/)) {
     const y = '１２３４'.indexOf(RegExp.$1) + 1;
 

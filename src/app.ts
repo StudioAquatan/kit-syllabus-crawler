@@ -4,8 +4,10 @@ import { fetchSubjects } from './crawler/list';
 // import { sleep } from './utils/sleep';
 
 (async () => {
+  const set = new Set<number>();
   for await (const subject of fetchSubjects(1, '00')) {
     console.log('fetch', subject.ja.id, subject.ja.title);
+    if (set.has(subject.ja.id)) continue;
     const subjectDetails = await fetchSubject(subject.ja.id);
     await fs.promises.appendFile(
       'gakubu_ja.json',
@@ -27,5 +29,6 @@ import { fetchSubjects } from './crawler/list';
         encoding: 'utf8',
       },
     );
+    set.add(subject.ja.id);
   }
 })();
