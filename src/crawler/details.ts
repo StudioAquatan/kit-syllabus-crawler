@@ -293,7 +293,9 @@ export const getClassInfo = (elem: Element | null) => {
       available: classificationItems['今年度開講 / Availability'][
         idx
       ].ja.includes('有'),
-      year: parseYear(classificationItems['年次 / Year'][idx].ja),
+      year: classificationItems['年次 / Year'][idx].ja
+        ? parseYear(classificationItems['年次 / Year'][idx].ja)
+        : [],
       semester: classificationItems['学期 / Semester'][idx].ja,
       faculty: classificationItems['学部等 / Faculty'][idx].ja,
       field: classificationItems['学域等 / Field'][idx].ja,

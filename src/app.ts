@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { fetchSubject } from './crawler/details';
 import { fetchSubjects } from './crawler/list';
-// import { sleep } from './utils/sleep';
+import { sleep } from './utils/sleep';
 
 (async () => {
   const set = new Set<number>();
@@ -30,5 +30,7 @@ import { fetchSubjects } from './crawler/list';
       },
     );
     set.add(subject.ja.id);
+
+    await sleep(500);
   }
 })();
