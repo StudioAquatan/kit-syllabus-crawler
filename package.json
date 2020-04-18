@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "build": "tsc -p .",
+    "start": "node ./bin/app.js"
+  },
   "dependencies": {
     "dotenv": "^8.2.0",
     "fp-ts": "^2.5.3",
