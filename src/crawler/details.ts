@@ -1,5 +1,6 @@
 import { isRight } from 'fp-ts/lib/Either';
 import { JSDOM } from 'jsdom';
+import fetch from 'node-fetch';
 import {
   CategoryObject,
   ClassPlanObject,
@@ -8,7 +9,6 @@ import {
   SubjectL10nEntity,
   subjectL10nEntity,
 } from '../types/subject-io';
-import { fetchWithCache } from '../utils/cached-http';
 import { parseDay, parseYear } from '../utils/time';
 
 const flagNameTable: Record<string, SubjectEntity['flags'][0]> = {
@@ -334,11 +334,11 @@ const getAttachments = (elem: Element | null) => {
 };
 
 export const fetchSubject = async (primaryKey: number) => {
-  const res = await fetchWithCache(
+  const res = await fetch(
     `https://www.syllabus.kit.ac.jp/?c=detail&pk=${primaryKey}`,
   );
 
-  const dom = new JSDOM(res);
+  const dom = new JSDOM(await res.text());
 
   const { baseInfoItems, flags, instructorsEN, instructorsJA } = getBaseInfo(
     dom.window.document.querySelector('#base_info_tbl'),

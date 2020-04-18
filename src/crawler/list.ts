@@ -1,20 +1,20 @@
 import { flatten } from 'fp-ts/lib/Array';
 import { isLeft, isRight } from 'fp-ts/lib/Either';
 import { JSDOM } from 'jsdom';
+import fetch from 'node-fetch';
 import {
   subjectL10nSimpleEntity,
   SubjectL10nSimpleEntity,
 } from '../types/subject-io';
-import { fetchWithCache } from '../utils/cached-http';
 
 const replaceEmptyText = (str: string) => (str === '-' ? '' : str);
 
 export const fetchSubjectList = async (page: number, sk: string) => {
-  const res = await fetchWithCache(
+  const res = await fetch(
     `https://www.syllabus.kit.ac.jp/?c=search_list&sk=${sk}&page=${page}`,
   );
 
-  const dom = new JSDOM(res);
+  const dom = new JSDOM(await res.text());
 
   const hasPrevious = !!dom.window.document.querySelector(
     `[href*="&page=${page - 1}"]`,
