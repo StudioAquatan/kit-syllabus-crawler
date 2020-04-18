@@ -98,4 +98,16 @@ const fetchAndNotify = async (
     resolve(config.dataDir, 'gakubu_hash'),
     config.notifyHook['00'],
   );
+
+  if (config.notifyHook.normal) {
+    await fetch(config.notifyHook.normal, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        content: `シラバス更新完了`,
+      }),
+    });
+  }
 })();

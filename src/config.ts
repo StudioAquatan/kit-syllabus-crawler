@@ -8,5 +8,6 @@ export const config = {
     '00': process.env.DISCORD_HOOK_00,
     '05': process.env.DISCORD_HOOK_05,
     '06': process.env.DISCORD_HOOK_06,
+    normal: process.env.DISCORD_HOOK,
   },
 };
