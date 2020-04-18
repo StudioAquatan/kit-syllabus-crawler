@@ -3,7 +3,5 @@ bin/
 coverage/
 .DS_Store
 .env
-cookies.txt
-graphql-generated.ts
 cache
-*.json
+data/*
