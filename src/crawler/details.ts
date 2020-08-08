@@ -238,7 +238,7 @@ export const getClassInfo = (elem: Element | null) => {
       'img[src="https://www.syllabus.kit.ac.jp/img/notes_icon1.png"]',
     )
   ) {
-    flags.push('3univ');
+    flags.push('univ3');
   }
   if (
     !!elem.querySelector(

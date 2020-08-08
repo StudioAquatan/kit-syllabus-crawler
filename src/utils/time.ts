@@ -18,15 +18,15 @@ export const parseDay = (day: string) => {
         .split(/[,、，]/g)
         .map(str => str.trim())
         .map(str => {
-          if (str.match(/^([月火水木金土])(\d)～(\d)$/)) {
-            const d = '月火水木金土'.indexOf(RegExp.$1);
+          if (str.match(/^([月火水木金土日])(\d)～(\d)$/)) {
+            const d = '月火水木金土日'.indexOf(RegExp.$1);
             const h1 = Number(RegExp.$2);
             const h2 = Number(RegExp.$3);
             return new Array(h2 - h1 + 1)
               .fill(0)
               .map((_v, idx) => [d, h1 + idx]);
-          } else if (str.match(/^([月火水木金土])(\d)$/)) {
-            const d = '月火水木金土'.indexOf(RegExp.$1);
+          } else if (str.match(/^([月火水木金土日])(\d)$/)) {
+            const d = '月火水木金土日'.indexOf(RegExp.$1);
             const h = Number(RegExp.$2);
             return [[d, h]];
           } else {

@@ -78,7 +78,7 @@ export const subjectEntityType = t.exact(
           t.literal('al'),
           t.literal('pbl'),
           t.literal('pt'),
-          t.literal('3univ'),
+          t.literal('univ3'),
           t.literal('kyoto'),
           t.literal('lottery'),
         ]),
