@@ -24,24 +24,27 @@ export const fetchSubjectList = async (page: number, sk: string) => {
   );
 
   const dataLists: Element[] = [].slice.apply(
-    dom.window.document.querySelectorAll('.data_list_tbl > tbody'),
+    dom.window.document.querySelectorAll('.data_list_tbl > tbody') ?? [],
   );
-  const categories = ([].slice.apply(
-    dom.window.document.querySelectorAll('.data_list_header'),
-  ) as Element[]).map(elem => ({
-    ja:
-      elem.firstChild?.textContent?.replace(/[\r\n\t]/g, '').split('＞') || [],
-    en: elem.lastChild?.textContent?.replace(/[\r\n\t]/g, '').split('＞') || [],
-  }));
+  const categories = [].slice
+    .apply<NodeList | unknown[], Element[]>(
+      dom.window.document.querySelectorAll('.data_list_header') || [],
+    )
+    .map(elem => ({
+      ja:
+        elem.firstChild?.textContent?.replace(/[\r\n\t]/g, '').split('＞') ??
+        [],
+      en:
+        elem.lastChild?.textContent?.replace(/[\r\n\t]/g, '').split('＞') ?? [],
+    }));
 
   if (categories.length !== dataLists.length) throw new Error('invalid page');
 
   const items = dataLists
-    .map(
-      elem =>
-        [].slice.apply(
-          elem.querySelectorAll('tr:not(:first-child)'),
-        ) as Element[],
+    .map(elem =>
+      [].slice.apply<NodeList | unknown[], Element[]>(
+        elem.querySelectorAll('tr:not(:first-child)'),
+      ),
     )
     .map((listItems, index) => {
       const items = listItems

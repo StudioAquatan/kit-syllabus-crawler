@@ -22,7 +22,8 @@ const flagNameTable: Record<string, SubjectEntity['flags'][0]> = {
 const replaceEmptyText = (str: string) => (str === '-' ? '' : str);
 const getText = (elem: Element) => {
   return replaceEmptyText(
-    ([].slice.apply(elem.childNodes) as Node[])
+    [].slice
+      .apply<NodeListOf<ChildNode>, Node[]>(elem.childNodes)
       .map(node => {
         if (node.nodeType === 3 /* TEXT_NODE */) {
           return node.textContent?.replace(/[\r\n]/g, '');
@@ -41,18 +42,21 @@ const getText = (elem: Element) => {
 const getTwoLangTable = (elem: Element | null) => {
   if (!elem) return ['', ''];
 
-  const items = ([].slice.apply(elem.querySelectorAll('td')) as Element[])
+  const items = [].slice
+    .apply<NodeList, Element[]>(elem.querySelectorAll('td'))
     .map(td => getText(td))
     .map(text => (text === '-' ? '' : text));
+
   if (items.length !== 2) throw new Error('not two lang table');
 
   return items;
 };
 
 const getBaseInfo = (elem: Element | null) => {
-  const baseInfoElems = [].slice.apply(
-    elem?.querySelectorAll('th') || [],
-  ) as Element[];
+  const baseInfoElems = [].slice.apply<NodeList | unknown[], Element[]>(
+    elem?.querySelectorAll('th') ?? [],
+  );
+
   const baseInfoItems = baseInfoElems
     .filter(
       item =>
@@ -75,16 +79,17 @@ const getBaseInfo = (elem: Element | null) => {
     item.textContent?.includes('担当教員名'),
   )?.nextElementSibling; // 担当教員のtd
   const instructorsJA =
-    instructorsElem?.childElementCount === 0
+    !instructorsElem || instructorsElem?.childElementCount === 0
       ? [
           {
             id: null,
-            name: instructorsElem.textContent || 'unknown',
+            name: instructorsElem?.textContent || 'unknown',
           },
         ] // 「某/undecided」のとき
-      : ([].slice.apply(
-          instructorsElem?.querySelectorAll('a') || [],
-        ) as HTMLAnchorElement[])
+      : [].slice
+          .apply<NodeList, HTMLAnchorElement[]>(
+            instructorsElem.querySelectorAll('a'),
+          )
           .map(item => ({
             id: item.href.match(/ja\.([a-f0-9]+)\.html/) ? RegExp.$1 : null,
             name: item.textContent || 'unknown',
@@ -98,7 +103,7 @@ const getBaseInfo = (elem: Element | null) => {
   const instructorsEN = instructorNamesEN.map((name, idx) =>
     instructorsJA[idx]
       ? {
-          ...instructorsJA[idx],
+          id: instructorsJA[idx].id,
           name,
         }
       : {
@@ -112,16 +117,17 @@ const getBaseInfo = (elem: Element | null) => {
   )?.parentElement; // 「その他」thの親tr
   if (!flagsElem) throw new Error('error while parsing flags (no elem)');
 
-  const flagsMap = ([].slice.apply(
-    flagsElem.querySelectorAll('th.txt_center'),
-  ) as Element[]).map(item => item.lastChild?.textContent);
+  const flagsMap = [].slice
+    .apply<NodeList, Element[]>(flagsElem.querySelectorAll('th.txt_center'))
+    .map(item => item.lastChild?.textContent);
 
   if (flagsMap.some(flag => !flag))
     throw new Error('error while parsing flags (flagMap item = null)');
 
-  const flags = ([].slice.apply(
-    flagsElem.nextElementSibling?.children,
-  ) as Element[])
+  const flags = [].slice
+    .apply<HTMLCollection | unknown[], Element[]>(
+      flagsElem.nextElementSibling?.children ?? [],
+    )
     .map((item, idx) =>
       item.textContent?.trim() !== '-' ? flagNameTable[flagsMap[idx]!] : null,
     )
@@ -139,8 +145,10 @@ const getPlans = (elem: Element | null) => {
   if (!elem) return { ja: [], en: [] };
 
   const trList = [].slice
-    .apply(elem.querySelector('tbody')?.querySelectorAll('tr'))
-    .slice(2) as Element[];
+    .apply<NodeList | unknown[], Element[]>(
+      elem.querySelector('tbody')?.querySelectorAll('tr') ?? [],
+    )
+    .slice(2);
 
   if (trList.length % 2 !== 0)
     throw new Error('error while parsing plan (count % 2)');
@@ -156,19 +164,19 @@ const getPlans = (elem: Element | null) => {
     ) as Element[];
     ja.push({
       topic:
-        replaceEmptyText(elemsJA[0].textContent || '') ||
-        replaceEmptyText(elemsEN[0].textContent || ''),
+        replaceEmptyText(elemsJA[0].textContent ?? '') ||
+        replaceEmptyText(elemsEN[0].textContent ?? ''),
       content:
-        replaceEmptyText(elemsJA[1].textContent || '') ||
-        replaceEmptyText(elemsEN[1].textContent || ''),
+        replaceEmptyText(elemsJA[1].textContent ?? '') ||
+        replaceEmptyText(elemsEN[1].textContent ?? ''),
     });
     en.push({
       topic:
-        replaceEmptyText(elemsEN[0].textContent || '') ||
-        replaceEmptyText(elemsJA[0].textContent || ''),
+        replaceEmptyText(elemsEN[0].textContent ?? '') ||
+        replaceEmptyText(elemsJA[0].textContent ?? ''),
       content:
-        replaceEmptyText(elemsEN[1].textContent || '') ||
-        replaceEmptyText(elemsJA[1].textContent || ''),
+        replaceEmptyText(elemsEN[1].textContent ?? '') ||
+        replaceEmptyText(elemsJA[1].textContent ?? ''),
     });
   }
 
@@ -178,7 +186,9 @@ const getPlans = (elem: Element | null) => {
   };
 };
 
-const getGoals = (elem: Element | null) => {
+const getGoals = (
+  elem: Element | null,
+): { ja: GoalObject | null; en: GoalObject | null } => {
   if (!elem) return { ja: null, en: null };
 
   const tbody = elem.querySelector('tbody');
@@ -193,7 +203,9 @@ const getGoals = (elem: Element | null) => {
   const jaGoal = getText(jaGoalElem);
   const enGoal = getText(enGoalElem) || jaGoal;
 
-  const trList = [].slice.apply(tbody.children).slice(5) as Element[];
+  const trList = [].slice
+    .apply<HTMLCollection, Element[]>(tbody.children)
+    .slice(5);
 
   if (trList.length % 2 !== 0)
     throw new Error('error while parsing goals (evaluation count % 2)');
@@ -205,15 +217,15 @@ const getGoals = (elem: Element | null) => {
       ?.textContent;
     const resultElemJA = trList[i].querySelector('td');
     ja.push({
-      label: replaceEmptyText(labelJA || ''),
-      description: replaceEmptyText(resultElemJA?.textContent || '') || null,
+      label: replaceEmptyText(labelJA ?? ''),
+      description: replaceEmptyText(resultElemJA?.textContent ?? ''),
     });
     const labelEN = trList[i].querySelector('th:nth-child(2)')?.lastChild
       ?.textContent;
     const resultElemEN = trList[i + 1].querySelector('td');
     en.push({
-      label: replaceEmptyText(labelEN || ''),
-      description: replaceEmptyText(resultElemEN?.textContent || '') || null,
+      label: replaceEmptyText(labelEN ?? ''),
+      description: replaceEmptyText(resultElemEN?.textContent ?? ''),
     });
   }
 
@@ -221,11 +233,11 @@ const getGoals = (elem: Element | null) => {
     ja: {
       description: jaGoal,
       evaluation: ja,
-    } as GoalObject,
+    },
     en: {
       description: enGoal,
       evaluation: en,
-    } as GoalObject,
+    },
   };
 };
 
@@ -255,9 +267,8 @@ export const getClassInfo = (elem: Element | null) => {
     flags.push('lottery');
   }
 
-  const classificationItems = ([].slice.apply(
-    elem.querySelectorAll('th') || [],
-  ) as Element[])
+  const classificationItems = [].slice
+    .apply<NodeList | unknown[], Element[]>(elem.querySelectorAll('th') ?? [])
     .filter(
       item =>
         item.textContent?.length &&
@@ -272,8 +283,8 @@ export const getClassInfo = (elem: Element | null) => {
       return {
         ...obj,
         [item.textContent!.trim()]: [
-          ...(obj[item.textContent!.trim()] || []),
-          { ja, en: en || ja },
+          ...(obj[item.textContent!.trim()] ?? []),
+          { ja, en: en === '' ? ja : en },
         ],
       };
     }, {});
@@ -324,13 +335,14 @@ export const getClassInfo = (elem: Element | null) => {
 const getAttachments = (elem: Element | null) => {
   if (!elem) return;
 
-  return ([].slice.apply(elem.querySelectorAll('tr')) as Element[])
+  return [].slice
+    .apply<NodeList | unknown[], Element[]>(elem.querySelectorAll('tr') ?? [])
     .filter(item => !!item.querySelector('span'))
     .map(item => ({
       filename: item.querySelector('span')?.textContent || '',
       fileKey: item.querySelector('button')?.value || '',
     }))
-    .filter(item => item.filename && item.fileKey);
+    .filter(item => item.filename !== '' && item.fileKey !== '');
 };
 
 export const fetchSubject = async (primaryKey: number) => {
@@ -382,14 +394,14 @@ export const fetchSubject = async (primaryKey: number) => {
     // common
     id: primaryKey,
     timetableId: baseInfoItems['時間割番号 / Timetable Number']
-      ? Number(baseInfoItems['時間割番号 / Timetable Number'][0] || 0) ||
+      ? Number(baseInfoItems['時間割番号 / Timetable Number'][0] ?? 0) ||
         undefined
       : undefined,
     courseId: baseInfoItems['科目番号 / Course Number']
-      ? Number(baseInfoItems['科目番号 / Course Number'][0] || 0) || undefined
+      ? Number(baseInfoItems['科目番号 / Course Number'][0] ?? 0) || undefined
       : undefined,
     credits: baseInfoItems['単位数 / Credits']
-      ? Number(baseInfoItems['単位数 / Credits'][0] || 0) || undefined
+      ? Number(baseInfoItems['単位数 / Credits'][0] ?? 0) || undefined
       : undefined,
     code: baseInfoItems['科目ナンバリング / Numbering Code'][0] || undefined,
     flags: [...flags, ...additionalFlags],
@@ -415,7 +427,7 @@ export const fetchSubject = async (primaryKey: number) => {
     researchPlan:
       researchPlan[0].length === 0 ? researchPlan[1] : researchPlan[0],
     plans: plans.ja,
-    goal: goals.ja || undefined,
+    goal: goals.ja ?? undefined,
     attachments,
   };
 
@@ -444,7 +456,7 @@ export const fetchSubject = async (primaryKey: number) => {
       researchPlan:
         researchPlan[1].length === 0 ? researchPlan[0] : researchPlan[1],
       plans: plans.en,
-      goal: goals.en || undefined,
+      goal: goals.en ?? undefined,
     },
   };
 

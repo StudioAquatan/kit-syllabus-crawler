@@ -24,7 +24,7 @@ export const goalObjectType = t.type({
   evaluation: t.array(
     t.type({
       label: t.string,
-      description: t.union([t.string, t.null]),
+      description: t.string,
     }),
   ),
 });
