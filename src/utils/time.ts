@@ -3,12 +3,12 @@ import { flatten } from 'fp-ts/lib/Array';
 export const parseDay = (day: string) => {
   if (day === '') {
     return {
-      type: 'noset' as const,
+      type: 'unknown' as const,
     };
   }
   if (day === '集中') {
     return {
-      type: 'inten' as const,
+      type: 'intensive' as const,
     };
   }
   return {
@@ -19,21 +19,30 @@ export const parseDay = (day: string) => {
         .map(str => str.trim())
         .map(str => {
           if (str.match(/^([月火水木金土日])(\d)～(\d)$/)) {
-            const d = '月火水木金土日'.indexOf(RegExp.$1);
+            const date = '月火水木金土日'.indexOf(RegExp.$1);
             const h1 = Number(RegExp.$2);
             const h2 = Number(RegExp.$3);
-            return new Array(h2 - h1 + 1)
-              .fill(0)
-              .map((_v, idx) => [d, h1 + idx]);
+            return new Array(h2 - h1 + 1).fill(0).map((_v, idx) => ({
+              date,
+              hour: h1 + idx,
+            }));
           } else if (str.match(/^([月火水木金土日])(\d)$/)) {
-            const d = '月火水木金土日'.indexOf(RegExp.$1);
-            const h = Number(RegExp.$2);
-            return [[d, h]];
+            const date = '月火水木金土日'.indexOf(RegExp.$1);
+            const hour = Number(RegExp.$2);
+            return [
+              {
+                date,
+                hour,
+              },
+            ];
           } else {
             throw new Error('unknown format of day');
           }
         }),
-    ) as Array<[number, number]>,
+    ) as Array<{
+      date: number;
+      hour: number;
+    }>,
   };
 };
 

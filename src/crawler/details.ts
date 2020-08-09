@@ -210,8 +210,8 @@ const getGoals = (
   if (trList.length % 2 !== 0)
     throw new Error('error while parsing goals (evaluation count % 2)');
 
-  const ja: GoalObject['evaluation'] = [];
-  const en: GoalObject['evaluation'] = [];
+  const ja: GoalObject['evaluations'] = [];
+  const en: GoalObject['evaluations'] = [];
   for (let i = 0; i < trList.length; i += 2) {
     const labelJA = trList[i].querySelector('th:nth-child(2)')?.firstChild
       ?.textContent;
@@ -232,11 +232,11 @@ const getGoals = (
   return {
     ja: {
       description: jaGoal,
-      evaluation: ja,
+      evaluations: ja,
     },
     en: {
       description: enGoal,
-      evaluation: en,
+      evaluations: en,
     },
   };
 };
@@ -312,7 +312,9 @@ export const getClassInfo = (elem: Element | null) => {
       field: classificationItems['学域等 / Field'][idx].ja,
       program: classificationItems['課程等 / Program'][idx].ja,
       category: classificationItems['分類 / Category'][idx].ja,
-      day: parseDay(classificationItems['曜日時限 / Day & Period'][idx].ja),
+      schedule: parseDay(
+        classificationItems['曜日時限 / Day & Period'][idx].ja,
+      ),
     }));
 
   const categoriesEN = categories.map((item, idx) => ({
@@ -339,10 +341,10 @@ const getAttachments = (elem: Element | null) => {
     .apply<NodeList | unknown[], Element[]>(elem.querySelectorAll('tr') ?? [])
     .filter(item => !!item.querySelector('span'))
     .map(item => ({
-      filename: item.querySelector('span')?.textContent || '',
-      fileKey: item.querySelector('button')?.value || '',
+      name: item.querySelector('span')?.textContent || '',
+      key: item.querySelector('button')?.value || '',
     }))
-    .filter(item => item.filename !== '' && item.fileKey !== '');
+    .filter(item => item.name !== '' && item.key !== '');
 };
 
 export const fetchSubject = async (primaryKey: number) => {
@@ -419,11 +421,11 @@ export const fetchSubject = async (primaryKey: number) => {
     instructors: instructorsJA,
     outline: outline[0].length === 0 ? outline[1] : outline[0],
     purpose: purpose[0].length === 0 ? purpose[1] : purpose[0],
-    requirements: require[0].length === 0 ? require[1] : require[0],
+    requirement: require[0].length === 0 ? require[1] : require[0],
     point: point[0].length === 0 ? point[1] : point[0],
-    textbooks: textbook[0].length === 0 ? textbook[1] : textbook[0],
+    textbook: textbook[0].length === 0 ? textbook[1] : textbook[0],
     gradingPolicy: policy[0].length === 0 ? policy[1] : policy[0],
-    remarks: remark[0].length === 0 ? remark[1] : remark[0],
+    remark: remark[0].length === 0 ? remark[1] : remark[0],
     researchPlan:
       researchPlan[0].length === 0 ? researchPlan[1] : researchPlan[0],
     plans: plans.ja,
@@ -448,11 +450,11 @@ export const fetchSubject = async (primaryKey: number) => {
       instructors: instructorsEN,
       outline: outline[1].length === 0 ? outline[0] : outline[1],
       purpose: purpose[1].length === 0 ? purpose[0] : purpose[1],
-      requirements: require[1].length === 0 ? require[0] : require[1],
+      requirement: require[1].length === 0 ? require[0] : require[1],
       point: point[1].length === 0 ? point[0] : point[1],
-      textbooks: textbook[1].length === 0 ? textbook[0] : textbook[1],
+      textbook: textbook[1].length === 0 ? textbook[0] : textbook[1],
       gradingPolicy: policy[1].length === 0 ? policy[0] : policy[1],
-      remarks: remark[1].length === 0 ? remark[0] : remark[1],
+      remark: remark[1].length === 0 ? remark[0] : remark[1],
       researchPlan:
         researchPlan[1].length === 0 ? researchPlan[0] : researchPlan[1],
       plans: plans.en,

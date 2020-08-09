@@ -21,7 +21,7 @@ export type ClassPlanObject = t.TypeOf<typeof classPlanObjectType>;
 
 export const goalObjectType = t.type({
   description: t.string,
-  evaluation: t.array(
+  evaluations: t.array(
     t.type({
       label: t.string,
       description: t.string,
@@ -42,15 +42,22 @@ export const categoryObjectType = t.intersection([
     semester: t.string,
     available: t.boolean,
     year: t.array(t.number),
-    day: t.intersection([
+    schedule: t.intersection([
       t.type({
         type: t.union([
-          t.literal('inten'),
+          t.literal('intensive'),
           t.literal('fixed'),
-          t.literal('noset'),
+          t.literal('unknown'),
         ]),
       }),
-      t.partial({ days: t.array(t.tuple([t.number, t.number])) }),
+      t.partial({
+        days: t.array(
+          t.type({
+            date: t.number,
+            hour: t.number,
+          }),
+        ),
+      }),
     ]),
   }),
 ]);
@@ -58,8 +65,8 @@ export const categoryObjectType = t.intersection([
 export type CategoryObject = t.TypeOf<typeof categoryObjectType>;
 
 export const attachmentObjectType = t.strict({
-  filename: t.string,
-  fileKey: t.string,
+  name: t.string,
+  key: t.string,
 });
 
 export type AttachmentObject = t.TypeOf<typeof attachmentObjectType>;
@@ -86,11 +93,11 @@ export const subjectEntityType = t.exact(
       outline: t.string,
       purpose: t.string,
       plans: t.array(classPlanObjectType),
-      requirements: t.string,
+      requirement: t.string,
       point: t.string,
-      textbooks: t.string,
+      textbook: t.string,
       gradingPolicy: t.string,
-      remarks: t.string,
+      remark: t.string,
       researchPlan: t.string,
     }),
     t.partial({
