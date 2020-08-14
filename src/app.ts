@@ -1,36 +1,62 @@
-import * as fs from 'fs';
+import { Client } from '@elastic/elasticsearch';
+import { Update } from '@elastic/elasticsearch/api/requestParams';
 import { fetchSubject } from './crawler/details';
 import { fetchSubjects } from './crawler/list';
+import { esIndexDef } from './es-defs';
 import { sleep } from './utils/sleep';
 
 (async () => {
+  const es = new Client({
+    node: process.env.ES_HOST,
+  });
+  const index = process.env.ES_INDEX || 'kitsyllabus';
+
+  const existsResult = await es.indices.exists({
+    index,
+  });
+
+  if (existsResult.statusCode !== 200) {
+    await es.indices.create({
+      index,
+      body: esIndexDef,
+    });
+  }
+
   const set = new Set<number>();
   for await (const subject of fetchSubjects(1, '00')) {
-    console.log('fetch', subject.ja.id, subject.ja.title);
     if (set.has(subject.ja.id)) continue;
-    const subjectDetails = await fetchSubject(subject.ja.id);
-    await fs.promises.appendFile(
-      'gakubu_ja.json',
-      JSON.stringify({
-        ...subjectDetails.ja,
-        category: subject.ja.category.slice(1),
-      }) + '\n',
-      {
-        encoding: 'utf8',
-      },
-    );
-    await fs.promises.appendFile(
-      'gakubu_en.json',
-      JSON.stringify({
-        ...subjectDetails.en,
-        category: subject.en.category.slice(1),
-      }) + '\n',
-      {
-        encoding: 'utf8',
-      },
-    );
-    set.add(subject.ja.id);
 
-    await sleep(500);
+    console.log('fetch', subject.ja.id, subject.ja.title);
+
+    const subjectDetails = await fetchSubject(subject.ja.id);
+    const options: Update = {
+      index,
+      id: `${subjectDetails.ja.id}`,
+      body: {
+        doc: subjectDetails.ja,
+        doc_as_upsert: true,
+      },
+    };
+    const result = await es.update(options);
+    if (result.statusCode !== 200 && result.statusCode !== 201) {
+      console.log(
+        'update failed',
+        subject.ja.id,
+        subject.ja.title,
+        result.statusCode,
+        result.warnings,
+      );
+    }
+
+    if (result.body.result !== 'noop' && result.body.result !== 'created') {
+      console.log(
+        'updated',
+        subject.ja.id,
+        subject.ja.title,
+        result.body.result,
+      );
+    }
+
+    await sleep(5000);
   }
 })();
