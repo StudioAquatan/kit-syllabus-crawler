@@ -2,6 +2,9 @@ export const esIndexDef = {
   mappings: {
     dynamic: false,
     properties: {
+      id: {
+        type: 'integer',
+      },
       timetableId: {
         type: 'integer',
       },

@@ -9,7 +9,7 @@ import { sleep } from './utils/sleep';
   const es = new Client({
     node: process.env.ES_HOST,
   });
-  const index = process.env.ES_INDEX || 'kitsyllabus';
+  const index = process.env.ES_INDEX || 'kittimetable_subjects';
 
   const existsResult = await es.indices.exists({
     index,
