@@ -28,11 +28,13 @@ const getText = (elem: Element) => {
         if (node.nodeType === 3 /* TEXT_NODE */) {
           return node.textContent?.replace(/[\r\n]/g, '');
         }
-        if (
-          node.nodeType === 1 /* ELEMENT_NODE */ &&
-          (node as Element).tagName === 'BR'
-        ) {
-          return '\n';
+        if (node.nodeType === 1 /* ELEMENT_NODE */) {
+          if ((node as Element).tagName === 'BR') {
+            return '\n';
+          }
+          if ((node as Element).tagName === 'A') {
+            return (node as Element).getAttribute('href');
+          }
         }
         return '';
       })
