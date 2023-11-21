@@ -4,7 +4,7 @@ import { JSDOM } from 'jsdom';
 import {
   subjectL10nSimpleEntity,
   SubjectL10nSimpleEntity,
-} from '../types/subject-io';
+} from '../types/subject-io.js';
 import { fetchWithCache } from '../utils/cached-http';
 
 const replaceEmptyText = (str: string) => (str === '-' ? '' : str);
@@ -30,7 +30,7 @@ export const fetchSubjectList = async (page: number, sk: string) => {
     .apply<NodeList | unknown[], Element[]>(
       dom.window.document.querySelectorAll('.data_list_header') || [],
     )
-    .map(elem => ({
+    .map((elem) => ({
       ja:
         elem.firstChild?.textContent?.replace(/[\r\n\t]/g, '').split('＞') ??
         [],
@@ -41,15 +41,15 @@ export const fetchSubjectList = async (page: number, sk: string) => {
   if (categories.length !== dataLists.length) throw new Error('invalid page');
 
   const items = dataLists
-    .map(elem =>
+    .map((elem) =>
       [].slice.apply<NodeList | unknown[], Element[]>(
         elem.querySelectorAll('tr:not(:first-child)'),
       ),
     )
     .map((listItems, index) => {
       const items = listItems
-        .filter(tr => !!tr.querySelector('td'))
-        .map(tr => {
+        .filter((tr) => !!tr.querySelector('td'))
+        .map((tr) => {
           const base = {
             id: Number(
               tr.children
@@ -82,11 +82,11 @@ export const fetchSubjectList = async (page: number, sk: string) => {
             },
           };
         })
-        .map(item => subjectL10nSimpleEntity.decode(item));
-      if (items.some(item => isLeft(item))) throw new Error('invalid page');
+        .map((item) => subjectL10nSimpleEntity.decode(item));
+      if (items.some((item) => isLeft(item))) throw new Error('invalid page');
       return {
         items: items.map(
-          item => (isRight(item) ? item.right : null), // it must be right
+          (item) => (isRight(item) ? item.right : null), // it must be right
         ) as SubjectL10nSimpleEntity[],
         category: categories[index],
       };
@@ -99,7 +99,7 @@ export const fetchSubjectList = async (page: number, sk: string) => {
   };
 };
 
-export const fetchSubjects = async function*(begin = 1, sk = '99') {
+export const fetchSubjects = async function* (begin = 1, sk = '99') {
   for (let page = begin; ; page++) {
     const result = await fetchSubjectList(page, sk);
     for (const item of result.items) {

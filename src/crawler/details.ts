@@ -24,7 +24,7 @@ const getText = (elem: Element) => {
   return replaceEmptyText(
     [].slice
       .apply<NodeListOf<ChildNode>, Node[]>(elem.childNodes)
-      .map(node => {
+      .map((node) => {
         if (node.nodeType === 3 /* TEXT_NODE */) {
           return node.textContent?.replace(/[\r\n]/g, '');
         }
@@ -46,8 +46,8 @@ const getTwoLangTable = (elem: Element | null) => {
 
   const items = [].slice
     .apply<NodeList, Element[]>(elem.querySelectorAll('td'))
-    .map(td => getText(td))
-    .map(text => (text === '-' ? '' : text));
+    .map((td) => getText(td))
+    .map((text) => (text === '-' ? '' : text));
 
   if (items.length !== 2) throw new Error('not two lang table');
 
@@ -61,7 +61,7 @@ const getBaseInfo = (elem: Element | null) => {
 
   const baseInfoItems = baseInfoElems
     .filter(
-      item =>
+      (item) =>
         item.textContent?.length &&
         !item.textContent?.match(/(担当教員名|その他)/) &&
         item.nextElementSibling?.tagName === 'TD' &&
@@ -72,13 +72,13 @@ const getBaseInfo = (elem: Element | null) => {
         ...obj,
         [item.textContent!.trim()]: item
           .nextElementSibling!.textContent!.split('/')
-          .map(str => replaceEmptyText(str.trim()))
-          .filter(str => str.length > 0),
+          .map((str) => replaceEmptyText(str.trim()))
+          .filter((str) => str.length > 0),
       };
     }, {});
 
-  const instructorsElem = baseInfoElems.find(item =>
-    item.textContent?.includes('担当教員名'),
+  const instructorsElem = baseInfoElems.find(
+    (item) => item.textContent?.includes('担当教員名'),
   )?.nextElementSibling; // 担当教員のtd
   const instructorsJA =
     !instructorsElem || instructorsElem?.childElementCount === 0
@@ -92,11 +92,11 @@ const getBaseInfo = (elem: Element | null) => {
           .apply<NodeList, HTMLAnchorElement[]>(
             instructorsElem.querySelectorAll('a'),
           )
-          .map(item => ({
+          .map((item) => ({
             id: item.href.match(/ja\.([a-f0-9]+)\.html/) ? RegExp.$1 : null,
             name: item.textContent || 'unknown',
           }))
-          .filter(item => item.name !== '他'); // その他はすべてリンク(?)
+          .filter((item) => item.name !== '他'); // その他はすべてリンク(?)
   const instructorNamesEN =
     instructorsElem?.parentElement?.nextElementSibling
       ?.querySelector('td')
@@ -114,16 +114,16 @@ const getBaseInfo = (elem: Element | null) => {
         },
   );
 
-  const flagsElem = baseInfoElems.find(item =>
-    item.textContent?.includes('その他'),
+  const flagsElem = baseInfoElems.find(
+    (item) => item.textContent?.includes('その他'),
   )?.parentElement; // 「その他」thの親tr
   if (!flagsElem) throw new Error('error while parsing flags (no elem)');
 
   const flagsMap = [].slice
     .apply<NodeList, Element[]>(flagsElem.querySelectorAll('th.txt_center'))
-    .map(item => item.lastChild?.textContent);
+    .map((item) => item.lastChild?.textContent);
 
-  if (flagsMap.some(flag => !flag))
+  if (flagsMap.some((flag) => !flag))
     throw new Error('error while parsing flags (flagMap item = null)');
 
   const flags = [].slice
@@ -215,15 +215,15 @@ const getGoals = (
   const ja: GoalObject['evaluations'] = [];
   const en: GoalObject['evaluations'] = [];
   for (let i = 0; i < trList.length; i += 2) {
-    const labelJA = trList[i].querySelector('th:nth-child(2)')?.firstChild
-      ?.textContent;
+    const labelJA =
+      trList[i].querySelector('th:nth-child(2)')?.firstChild?.textContent;
     const resultElemJA = trList[i].querySelector('td');
     ja.push({
       label: replaceEmptyText(labelJA ?? ''),
       description: replaceEmptyText(resultElemJA?.textContent ?? ''),
     });
-    const labelEN = trList[i].querySelector('th:nth-child(2)')?.lastChild
-      ?.textContent;
+    const labelEN =
+      trList[i].querySelector('th:nth-child(2)')?.lastChild?.textContent;
     const resultElemEN = trList[i + 1].querySelector('td');
     en.push({
       label: replaceEmptyText(labelEN ?? ''),
@@ -272,7 +272,7 @@ export const getClassInfo = (elem: Element | null) => {
   const classificationItems = [].slice
     .apply<NodeList | unknown[], Element[]>(elem.querySelectorAll('th') ?? [])
     .filter(
-      item =>
+      (item) =>
         item.textContent?.length &&
         item.nextElementSibling?.tagName === 'TD' &&
         item.nextElementSibling.textContent?.length,
@@ -280,7 +280,7 @@ export const getClassInfo = (elem: Element | null) => {
     .reduce<Record<string, Array<{ ja: string; en: string }>>>((obj, item) => {
       const [ja, en] = item
         .nextElementSibling!.textContent!.split('/')
-        .map(str => replaceEmptyText(str.trim()));
+        .map((str) => replaceEmptyText(str.trim()));
 
       return {
         ...obj,
@@ -292,7 +292,7 @@ export const getClassInfo = (elem: Element | null) => {
     }, {});
 
   const lens = Object.values(classificationItems)
-    .map(arr => arr.length)
+    .map((arr) => arr.length)
     .reduce<number[]>(
       (arr, len) => (arr.includes(len) ? arr : [...arr, len]),
       [],
@@ -303,9 +303,8 @@ export const getClassInfo = (elem: Element | null) => {
   const categories: CategoryObject[] = new Array(lens[0])
     .fill(0)
     .map((_v, idx) => ({
-      available: classificationItems['今年度開講 / Availability'][
-        idx
-      ].ja.includes('有'),
+      available:
+        classificationItems['今年度開講 / Availability'][idx].ja.includes('有'),
       year: classificationItems['年次 / Year'][idx].ja
         ? parseYear(classificationItems['年次 / Year'][idx].ja)
         : [],
@@ -341,12 +340,12 @@ const getAttachments = (elem: Element | null) => {
 
   return [].slice
     .apply<NodeList | unknown[], Element[]>(elem.querySelectorAll('tr') ?? [])
-    .filter(item => !!item.querySelector('span'))
-    .map(item => ({
+    .filter((item) => !!item.querySelector('span'))
+    .map((item) => ({
       name: item.querySelector('span')?.textContent || '',
       key: item.querySelector('button')?.value || '',
     }))
-    .filter(item => item.name !== '' && item.key !== '');
+    .filter((item) => item.name !== '' && item.key !== '');
 };
 
 export const fetchSubject = async (primaryKey: number) => {
@@ -360,9 +359,11 @@ export const fetchSubject = async (primaryKey: number) => {
     dom.window.document.querySelector('#base_info_tbl'),
   );
 
-  const { flags: additionalFlags, categories, categoriesEN } = getClassInfo(
-    dom.window.document.querySelector('#classification_tbl'),
-  );
+  const {
+    flags: additionalFlags,
+    categories,
+    categoriesEN,
+  } = getClassInfo(dom.window.document.querySelector('#classification_tbl'));
 
   const outline = getTwoLangTable(
     dom.window.document.querySelector('#outline_tbl'),

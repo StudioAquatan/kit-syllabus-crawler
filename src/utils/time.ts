@@ -16,8 +16,8 @@ export const parseDay = (day: string) => {
     days: flatten(
       day
         .split(/[,、，]/g)
-        .map(str => str.trim())
-        .map(str => {
+        .map((str) => str.trim())
+        .map((str) => {
           if (str.match(/^([月火水木金土日])(\d)～(\d)$/)) {
             const date = '月火水木金土日'.indexOf(RegExp.$1);
             const h1 = Number(RegExp.$2);
