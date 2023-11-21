@@ -85,7 +85,8 @@ const getBaseInfo = (elem: Element | null) => {
       ? [
           {
             id: null,
-            name: instructorsElem?.textContent || 'unknown',
+            name:
+              instructorsElem?.textContent?.replace(/[\n\t]/g, '') || 'unknown',
           },
         ] // 「某/undecided」のとき
       : [].slice
@@ -106,11 +107,11 @@ const getBaseInfo = (elem: Element | null) => {
     instructorsJA[idx]
       ? {
           id: instructorsJA[idx].id,
-          name,
+          name: name?.replace(/[\n\t]/g, ''),
         }
       : {
           id: null,
-          name,
+          name: name?.replace(/[\n\t]/g, ''),
         },
   );
 
