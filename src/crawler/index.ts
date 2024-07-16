@@ -24,31 +24,43 @@ export const listWorker = new Worker<{ page: number; indexId: string }>(
 
     console.log('fetching list page = ', job.data.page);
 
-    const result = await fetchSubjectList(job.data.page, '99');
-    for (const item of result.items) {
-      await detailQueue.add(
-        'detail',
-        { primaryKey: item.ja.id, indexId: job.data.indexId },
-        {
-          parent: {
-            id: job.id!,
-            queue: job.queueQualifiedName,
-          },
-        },
-      );
-    }
+    const finalize = async () => {
+      await createAlias(ELASTICSEARCH_JA_INDEX, job.data.indexId);
+      await createAlias(ELASTICSEARCH_EN_INDEX, job.data.indexId);
+    };
 
-    if (!result.hasNext) {
-      const shouldWait = await job.moveToWaitingChildren(token!);
-      if (!shouldWait) {
-        // no more children
-        await createAlias(ELASTICSEARCH_JA_INDEX, job.data.indexId);
-        await createAlias(ELASTICSEARCH_EN_INDEX, job.data.indexId);
-        await job.moveToCompleted({}, token!);
-        return;
-      } else {
-        throw new WaitingChildrenError();
+    if (job.data.page > 0) {
+      const result = await fetchSubjectList(job.data.page, '99');
+      for (const item of result.items) {
+        await detailQueue.add(
+          'detail',
+          { primaryKey: item.ja.id, indexId: job.data.indexId },
+          {
+            parent: {
+              id: job.id!,
+              queue: job.queueQualifiedName,
+            },
+          },
+        );
       }
+
+      if (!result.hasNext) {
+        const shouldWait = await job.moveToWaitingChildren(token!);
+        if (!shouldWait) {
+          // no more children
+          await finalize();
+          return;
+        } else {
+          await job.updateData({
+            page: -1,
+            indexId: job.data.indexId,
+          });
+          throw new WaitingChildrenError();
+        }
+      }
+    } else {
+      await finalize();
+      return;
     }
 
     await job.moveToDelayed(Date.now() + 1000, token);
