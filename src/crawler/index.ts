@@ -72,8 +72,6 @@ export const listWorker = new Worker<{ page: number; indexId: string }>(
   },
   {
     connection: redis,
-    removeOnComplete: { count: 10 },
-    removeOnFail: { age: 60 * 60 },
     concurrency: 1,
     limiter: {
       max: 1,
@@ -117,8 +115,8 @@ export const detailWorker = new Worker<{ primaryKey: number; indexId: string }>(
   },
   {
     connection: redis,
-    removeOnComplete: { count: 3000 },
-    removeOnFail: { age: 60 * 60 },
+    removeOnComplete: { count: 3000, age: 60 * 60 * 24 },
+    removeOnFail: { age: 60 * 60 * 24 * 14 },
     concurrency: 2,
     limiter: {
       max: 4,
