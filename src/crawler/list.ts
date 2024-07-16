@@ -4,17 +4,24 @@ import { JSDOM } from 'jsdom';
 import {
   subjectL10nSimpleEntity,
   SubjectL10nSimpleEntity,
-} from '../types/subject-io.js';
-import { fetchWithCache } from '../utils/cached-http';
+} from './subject-io.js';
 
 const replaceEmptyText = (str: string) => (str === '-' ? '' : str);
 
-export const fetchSubjectList = async (page: number, sk: string) => {
-  const res = await fetchWithCache(
+export const fetchSubjectList = async (
+  page: number,
+  sk: string,
+  fetchImpl = fetch,
+) => {
+  const res = await fetchImpl(
     `https://www.syllabus.kit.ac.jp/?c=search_list&sk=${sk}&page=${page}`,
   );
 
-  const dom = new JSDOM(res);
+  if (!res.ok) throw new Error('failed');
+
+  const content = await res.text();
+
+  const dom = new JSDOM(content);
 
   const hasPrevious = !!dom.window.document.querySelector(
     `[href*="&page=${page - 1}"]`,
@@ -27,9 +34,10 @@ export const fetchSubjectList = async (page: number, sk: string) => {
     dom.window.document.querySelectorAll('.data_list_tbl > tbody') ?? [],
   );
   const categories = [].slice
-    .apply<NodeList | unknown[], Element[]>(
-      dom.window.document.querySelectorAll('.data_list_header') || [],
-    )
+    .apply<
+      NodeList | unknown[],
+      Element[]
+    >(dom.window.document.querySelectorAll('.data_list_header') || [])
     .map((elem) => ({
       ja:
         elem.firstChild?.textContent?.replace(/[\r\n\t]/g, '').split('＞') ??

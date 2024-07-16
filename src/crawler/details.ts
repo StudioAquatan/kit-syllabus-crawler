@@ -7,9 +7,8 @@ import {
   SubjectEntity,
   SubjectL10nEntity,
   subjectL10nEntity,
-} from '../types/subject-io';
-import { fetchWithCache } from '../utils/cached-http';
-import { parseDay, parseYear } from '../utils/time';
+} from './subject-io';
+import { parseDay, parseYear } from './time';
 
 const flagNameTable: Record<string, SubjectEntity['flags'][0]> = {
   Internship: 'internship',
@@ -77,8 +76,8 @@ const getBaseInfo = (elem: Element | null) => {
       };
     }, {});
 
-  const instructorsElem = baseInfoElems.find(
-    (item) => item.textContent?.includes('担当教員名'),
+  const instructorsElem = baseInfoElems.find((item) =>
+    item.textContent?.includes('担当教員名'),
   )?.nextElementSibling; // 担当教員のtd
   const instructorsJA =
     !instructorsElem || instructorsElem?.childElementCount === 0
@@ -115,8 +114,8 @@ const getBaseInfo = (elem: Element | null) => {
         },
   );
 
-  const flagsElem = baseInfoElems.find(
-    (item) => item.textContent?.includes('その他'),
+  const flagsElem = baseInfoElems.find((item) =>
+    item.textContent?.includes('その他'),
   )?.parentElement; // 「その他」thの親tr
   if (!flagsElem) throw new Error('error while parsing flags (no elem)');
 
@@ -148,9 +147,10 @@ const getPlans = (elem: Element | null) => {
   if (!elem) return { ja: [], en: [] };
 
   const trList = [].slice
-    .apply<NodeList | unknown[], Element[]>(
-      elem.querySelector('tbody')?.querySelectorAll('tr') ?? [],
-    )
+    .apply<
+      NodeList | unknown[],
+      Element[]
+    >(elem.querySelector('tbody')?.querySelectorAll('tr') ?? [])
     .slice(2);
 
   if (trList.length % 2 !== 0)
@@ -349,12 +349,16 @@ const getAttachments = (elem: Element | null) => {
     .filter((item) => item.name !== '' && item.key !== '');
 };
 
-export const fetchSubject = async (primaryKey: number) => {
-  const res = await fetchWithCache(
+export const fetchSubject = async (primaryKey: number, fetchImpl = fetch) => {
+  const response = await fetchImpl(
     `https://www.syllabus.kit.ac.jp/?c=detail&pk=${primaryKey}`,
   );
 
-  const dom = new JSDOM(res);
+  if (!response.ok) throw new Error('failed to fetch');
+
+  const content = await response.text();
+
+  const dom = new JSDOM(content);
 
   const { baseInfoItems, flags, instructorsEN, instructorsJA } = getBaseInfo(
     dom.window.document.querySelector('#base_info_tbl'),

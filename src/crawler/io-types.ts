@@ -1,4 +1,4 @@
-import { either } from 'fp-ts/lib/Either';
+import { either } from 'fp-ts/Either';
 import * as t from 'io-ts';
 
 export const NonNaNNumber = new t.Type<number, number, unknown>(

@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { NonNaNNumber } from '../utils/io-types';
+import { NonNaNNumber } from './io-types';
 
 export const instructorEntityType = t.type({
   id: t.union([t.string, t.null]),
