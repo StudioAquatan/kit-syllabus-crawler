@@ -65,7 +65,7 @@ export const listWorker = new Worker<{ page: number; indexId: string }>(
     concurrency: 1,
     limiter: {
       max: 1,
-      duration: 5000,
+      duration: 1000,
     },
   },
 );

@@ -81,6 +81,7 @@ export const fetchSubjectList = async (
             credits: Number(tr.children.item(4)?.textContent),
             category: categories[index].ja,
           };
+          if (isNaN(base.credits)) base.credits = -1;
           return {
             ja: base,
             en: {

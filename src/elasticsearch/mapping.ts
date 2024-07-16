@@ -8,7 +8,7 @@ const indexSetting: IndicesIndexSettings = {
   index: {
     analysis: {
       analyzer: {
-        kuromoji_normalize: {
+        default: {
           type: 'custom',
           char_filter: ['icu_normalizer'],
           tokenizer: 'kuromoji_tokenizer',

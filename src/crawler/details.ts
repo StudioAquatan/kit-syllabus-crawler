@@ -440,6 +440,8 @@ export const fetchSubject = async (primaryKey: number, fetchImpl = fetch) => {
     attachments,
   };
 
+  if (isNaN(jaEntity.credits ?? 0)) jaEntity.credits = -1;
+
   const entity: SubjectL10nEntity = {
     ja: jaEntity,
     en: {
