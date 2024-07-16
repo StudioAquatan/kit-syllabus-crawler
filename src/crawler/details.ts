@@ -249,21 +249,21 @@ export const getClassInfo = (elem: Element | null) => {
 
   const flags: SubjectEntity['flags'] = [];
   if (
-    !!elem.querySelector(
+    elem.querySelector(
       'img[src="https://www.syllabus.kit.ac.jp/img/notes_icon1.png"]',
     )
   ) {
     flags.push('univ3');
   }
   if (
-    !!elem.querySelector(
+    elem.querySelector(
       'img[src="https://www.syllabus.kit.ac.jp/img/notes_icon2.png"]',
     )
   ) {
     flags.push('kyoto');
   }
   if (
-    !!elem.querySelector(
+    elem.querySelector(
       'img[src="https://www.syllabus.kit.ac.jp/img/notes_icon3.png"]',
     )
   ) {
@@ -404,11 +404,10 @@ export const fetchSubject = async (primaryKey: number, fetchImpl = fetch) => {
     // common
     id: primaryKey,
     timetableId: baseInfoItems['時間割番号 / Timetable Number']
-      ? Number(baseInfoItems['時間割番号 / Timetable Number'][0] ?? 0) ||
-        undefined
+      ? baseInfoItems['時間割番号 / Timetable Number'][0] || undefined
       : undefined,
     courseId: baseInfoItems['科目番号 / Course Number']
-      ? Number(baseInfoItems['科目番号 / Course Number'][0] ?? 0) || undefined
+      ? baseInfoItems['科目番号 / Course Number'][0] || undefined
       : undefined,
     credits: baseInfoItems['単位数 / Credits']
       ? Number(baseInfoItems['単位数 / Credits'][0] ?? 0) || undefined

@@ -1,23 +1,33 @@
-import { fetchSubject } from './crawler/details';
-import { fetchSubjects } from './crawler/list';
-import { sleep } from './utils/sleep';
-import { writeFile } from 'fs/promises';
+import { createBullBoard } from '@bull-board/api';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { HonoAdapter } from '@bull-board/hono';
+import { serve } from '@hono/node-server';
+import { serveStatic } from '@hono/node-server/serve-static';
+import { Hono } from 'hono';
+import { PORT } from './config';
+import { elastic } from './connection';
+import { detailQueue, listQueue } from './crawler';
 
 (async () => {
-  const set = new Set<number>();
-  for await (const subject of fetchSubjects(1, '00')) {
-    if (set.has(subject.ja.id)) continue;
+  const info = await elastic.info();
+  console.log('Elasticsearch version', info.version.number);
 
-    console.log('fetch', subject.ja.id, subject.ja.title);
+  const app = new Hono();
 
-    const subjectDetails = await fetchSubject(subject.ja.id);
+  app.get('/', (c) => c.text('Hello Hono!'));
 
-    await writeFile(
-      `./data/${subject.ja.id}.json`,
-      JSON.stringify(subjectDetails, null, 2),
-      { encoding: 'utf8' },
-    );
+  const serverAdapter = new HonoAdapter(serveStatic);
+  serverAdapter.setBasePath('/admin/queues');
 
-    await sleep(1000);
-  }
+  createBullBoard({
+    queues: [new BullMQAdapter(listQueue), new BullMQAdapter(detailQueue)],
+    serverAdapter,
+  });
+
+  app.route('/admin/queues', serverAdapter.registerPlugin());
+
+  serve({
+    fetch: app.fetch,
+    port: PORT,
+  });
 })();

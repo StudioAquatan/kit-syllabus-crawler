@@ -31,10 +31,10 @@ const subjectMapping: MappingTypeMapping['properties'] = {
     type: 'integer',
   },
   timetableId: {
-    type: 'integer',
+    type: 'keyword',
   },
   courseId: {
-    type: 'integer',
+    type: 'keyword',
   },
   credits: {
     type: 'integer',

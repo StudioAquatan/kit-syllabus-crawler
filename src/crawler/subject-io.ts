@@ -101,8 +101,8 @@ export const subjectEntityType = t.exact(
       researchPlan: t.string,
     }),
     t.partial({
-      timetableId: NonNaNNumber,
-      courseId: NonNaNNumber,
+      timetableId: t.string,
+      courseId: t.string,
       credits: NonNaNNumber,
       type: t.string,
       code: t.string,
@@ -125,7 +125,7 @@ export const subjectSimpleEntityType = t.exact(
   t.intersection([
     t.type({
       id: NonNaNNumber,
-      timetableId: NonNaNNumber,
+      timetableId: t.string,
       title: t.string,
       type: t.string,
       credits: NonNaNNumber,

@@ -46,7 +46,10 @@ export const fetchSubjectList = async (
         elem.lastChild?.textContent?.replace(/[\r\n\t]/g, '').split('＞') ?? [],
     }));
 
-  if (categories.length !== dataLists.length) throw new Error('invalid page');
+  if (categories.length !== dataLists.length)
+    throw new Error(
+      `invalid page categories=${categories.length} dataLists=${dataLists.length}`,
+    );
 
   const items = dataLists
     .map((elem) =>
@@ -68,8 +71,8 @@ export const fetchSubjectList = async (
                 ? RegExp.$1
                 : -1,
             ),
-            timetableId: Number(
-              replaceEmptyText(tr.children.item(0)?.textContent || '') || -1,
+            timetableId: replaceEmptyText(
+              tr.children.item(0)?.textContent || '',
             ),
             title: tr.children.item(1)?.querySelector('a')?.firstChild
               ?.textContent,
@@ -91,7 +94,8 @@ export const fetchSubjectList = async (
           };
         })
         .map((item) => subjectL10nSimpleEntity.decode(item));
-      if (items.some((item) => isLeft(item))) throw new Error('invalid page');
+      if (items.some((item) => isLeft(item)))
+        throw new Error(`invalid page ${items}`);
       return {
         items: items.map(
           (item) => (isRight(item) ? item.right : null), // it must be right
