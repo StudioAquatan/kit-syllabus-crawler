@@ -17,16 +17,24 @@ export async function ensureIndex(prefix: string, indexId: string) {
   );
 }
 
+type SubjectEntityWithCompletion = SubjectEntity & {
+  completion: string[];
+};
+
 export async function addDocument(
   prefix: string,
   indexId: string,
   id: string,
   body: SubjectEntity,
 ) {
-  await elastic.index<SubjectEntity>({
+  const bodyWithCompletion: SubjectEntityWithCompletion = {
+    ...body,
+    completion: [body.title, ...body.instructors.map(({ name }) => name)],
+  };
+  await elastic.index<SubjectEntityWithCompletion>({
     index: indexName(prefix, indexId),
     id,
-    body,
+    body: bodyWithCompletion,
   });
 }
 

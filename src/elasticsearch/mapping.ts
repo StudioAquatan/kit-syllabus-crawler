@@ -98,7 +98,7 @@ const subjectMapping: MappingTypeMapping['properties'] = {
     type: 'keyword',
   },
   title: {
-    type: 'search_as_you_type',
+    type: 'text',
   },
   instructors: {
     type: 'nested',
@@ -108,6 +108,11 @@ const subjectMapping: MappingTypeMapping['properties'] = {
       },
       name: {
         type: 'text',
+        fields: {
+          keyword: {
+            type: 'keyword',
+          },
+        },
       },
     },
   },
@@ -164,6 +169,14 @@ const subjectMapping: MappingTypeMapping['properties'] = {
         },
       },
     },
+  },
+  completion: {
+    type: 'completion',
+    analyzer: 'kuromoji_completion_index',
+    search_analyzer: 'kuromoji_completion_query',
+    preserve_separators: false,
+    preserve_position_increments: true,
+    max_input_length: 50,
   },
 };
 
