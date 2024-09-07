@@ -1,4 +1,3 @@
-import { isRight } from 'fp-ts/lib/Either';
 import { JSDOM } from 'jsdom';
 import {
   CategoryObject,
@@ -471,8 +470,5 @@ export const fetchSubject = async (primaryKey: number, fetchImpl = fetch) => {
     },
   };
 
-  const decoded = subjectL10nEntity.decode(entity);
-
-  if (isRight(decoded)) return decoded.right;
-  else throw decoded.left;
+  return subjectL10nEntity.parse(entity);
 };

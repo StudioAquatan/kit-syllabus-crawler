@@ -1,10 +1,6 @@
 import { flatten } from 'fp-ts/lib/Array';
-import { isLeft, isRight } from 'fp-ts/lib/Either';
 import { JSDOM } from 'jsdom';
-import {
-  subjectL10nSimpleEntity,
-  SubjectL10nSimpleEntity,
-} from './subject-io.js';
+import { subjectL10nSimpleEntity } from './subject-io.js';
 
 const replaceEmptyText = (str: string) => (str === '-' ? '' : str);
 
@@ -94,13 +90,9 @@ export const fetchSubjectList = async (
             },
           };
         })
-        .map((item) => subjectL10nSimpleEntity.decode(item));
-      if (items.some((item) => isLeft(item)))
-        throw new Error(`invalid page ${items}`);
+        .map((item) => subjectL10nSimpleEntity.parse(item));
       return {
-        items: items.map(
-          (item) => (isRight(item) ? item.right : null), // it must be right
-        ) as SubjectL10nSimpleEntity[],
+        items,
         category: categories[index],
       };
     });

@@ -1,145 +1,122 @@
-import * as t from 'io-ts';
-import { NonNaNNumber } from './io-types';
+import { z } from '@hono/zod-openapi';
 
-export const instructorEntityType = t.type({
-  id: t.union([t.string, t.null]),
-  name: t.string,
+export const instructorEntityType = z.strictObject({
+  id: z.string().nullable(),
+  name: z.string(),
 });
 
-export type InstructorEntity = t.TypeOf<typeof instructorEntityType>;
+export type InstructorEntity = z.TypeOf<typeof instructorEntityType>;
 
-export const classPlanObjectType = t.intersection([
-  t.type({
-    topic: t.string,
-  }),
-  t.partial({
-    content: t.string,
-  }),
-]);
+export const classPlanObjectType = z.strictObject({
+  topic: z.string(),
+  content: z.string().nullable(),
+});
 
-export type ClassPlanObject = t.TypeOf<typeof classPlanObjectType>;
+export type ClassPlanObject = z.TypeOf<typeof classPlanObjectType>;
 
-export const goalObjectType = t.type({
-  description: t.string,
-  evaluations: t.array(
-    t.type({
-      label: t.string,
-      description: t.string,
+export const goalObjectType = z.strictObject({
+  description: z.string(),
+  evaluations: z.array(
+    z.strictObject({
+      label: z.string(),
+      description: z.string(),
     }),
   ),
 });
 
-export type GoalObject = t.TypeOf<typeof goalObjectType>;
+export type GoalObject = z.TypeOf<typeof goalObjectType>;
 
-export const categoryObjectType = t.intersection([
-  t.partial({
-    faculty: t.string,
-    field: t.string,
-    program: t.string,
-    category: t.string,
-  }),
-  t.type({
-    semester: t.string,
-    available: t.boolean,
-    year: t.array(t.number),
-    schedule: t.intersection([
-      t.type({
-        type: t.union([
-          t.literal('intensive'),
-          t.literal('fixed'),
-          t.literal('unknown'),
-        ]),
-      }),
-      t.partial({
-        days: t.array(
-          t.type({
-            date: t.number,
-            hour: t.number,
-          }),
-        ),
-      }),
+export const categoryObjectType = z.strictObject({
+  faculty: z.string().optional(),
+  field: z.string().optional(),
+  program: z.string().optional(),
+  category: z.string().optional(),
+  semester: z.string(),
+  available: z.boolean(),
+  year: z.number().int().array(),
+  schedule: z.strictObject({
+    type: z.union([
+      z.literal('intensive'),
+      z.literal('fixed'),
+      z.literal('unknown'),
     ]),
+    days: z
+      .strictObject({
+        date: z.number().int(),
+        hour: z.number().int(),
+      })
+      .array()
+      .optional(),
   }),
-]);
-
-export type CategoryObject = t.TypeOf<typeof categoryObjectType>;
-
-export const attachmentObjectType = t.strict({
-  name: t.string,
-  key: t.string,
 });
 
-export type AttachmentObject = t.TypeOf<typeof attachmentObjectType>;
+export type CategoryObject = z.TypeOf<typeof categoryObjectType>;
 
-export const subjectEntityType = t.exact(
-  t.intersection([
-    t.type({
-      id: NonNaNNumber,
-      categories: t.array(categoryObjectType),
-      title: t.string,
-      instructors: t.array(instructorEntityType),
-      flags: t.array(
-        t.union([
-          t.literal('internship'),
-          t.literal('igp'),
-          t.literal('al'),
-          t.literal('pbl'),
-          t.literal('pt'),
-          t.literal('univ3'),
-          t.literal('kyoto'),
-          t.literal('lottery'),
-        ]),
-      ),
-      outline: t.string,
-      purpose: t.string,
-      plans: t.array(classPlanObjectType),
-      requirement: t.string,
-      point: t.string,
-      textbook: t.string,
-      gradingPolicy: t.string,
-      remark: t.string,
-      researchPlan: t.string,
-    }),
-    t.partial({
-      timetableId: t.string,
-      courseId: t.string,
-      credits: NonNaNNumber,
-      type: t.string,
-      code: t.string,
-      class: t.string,
-      goal: goalObjectType,
-      attachments: t.array(attachmentObjectType),
-    }),
-  ]),
-);
+export const attachmentObjectType = z.strictObject({
+  name: z.string(),
+  key: z.string(),
+});
 
-export type SubjectEntity = t.TypeOf<typeof subjectEntityType>;
+export type AttachmentObject = z.TypeOf<typeof attachmentObjectType>;
 
-export const subjectL10nEntity = t.strict({
+export const subjectEntityType = z.strictObject({
+  id: z.number().int(),
+  categories: categoryObjectType.array(),
+  title: z.string(),
+  instructors: instructorEntityType.array(),
+  flags: z.array(
+    z.union([
+      z.literal('internship'),
+      z.literal('igp'),
+      z.literal('al'),
+      z.literal('pbl'),
+      z.literal('pt'),
+      z.literal('univ3'),
+      z.literal('kyoto'),
+      z.literal('lottery'),
+    ]),
+  ),
+  outline: z.string(),
+  purpose: z.string(),
+  plans: classPlanObjectType.array(),
+  requirement: z.string(),
+  point: z.string(),
+  textbook: z.string(),
+  gradingPolicy: z.string(),
+  remark: z.string(),
+  researchPlan: z.string(),
+  // Optional fields
+  timetableId: z.string().optional(),
+  courseId: z.string().optional(),
+  credits: z.number().int().optional(),
+  type: z.string().optional(),
+  code: z.string().optional(),
+  class: z.string().optional(),
+  goal: goalObjectType.optional(),
+  attachments: attachmentObjectType.array().optional(),
+});
+
+export type SubjectEntity = z.TypeOf<typeof subjectEntityType>;
+
+export const subjectL10nEntity = z.strictObject({
   ja: subjectEntityType,
   en: subjectEntityType,
 });
-export type SubjectL10nEntity = t.TypeOf<typeof subjectL10nEntity>;
+export type SubjectL10nEntity = z.TypeOf<typeof subjectL10nEntity>;
 
-export const subjectSimpleEntityType = t.exact(
-  t.intersection([
-    t.type({
-      id: NonNaNNumber,
-      timetableId: t.string,
-      title: t.string,
-      type: t.string,
-      credits: NonNaNNumber,
-      category: t.array(t.string),
-    }),
-    t.partial({
-      class: t.string,
-    }),
-  ]),
-);
-export type SubjectSimpleEntity = t.TypeOf<typeof subjectSimpleEntityType>;
+export const subjectSimpleEntityType = z.strictObject({
+  id: z.number().int(),
+  timetableId: z.string(),
+  title: z.string(),
+  type: z.string(),
+  credits: z.number().int(),
+  category: z.string().array(),
+  class: z.string(),
+});
+export type SubjectSimpleEntity = z.TypeOf<typeof subjectSimpleEntityType>;
 
-export const subjectL10nSimpleEntity = t.strict({
+export const subjectL10nSimpleEntity = z.strictObject({
   ja: subjectSimpleEntityType,
   en: subjectSimpleEntityType,
 });
-export type SubjectL10nSimpleEntity = t.TypeOf<typeof subjectL10nSimpleEntity>;
+export type SubjectL10nSimpleEntity = z.TypeOf<typeof subjectL10nSimpleEntity>;
