@@ -20,6 +20,7 @@
     "pretty": true,
     "forceConsistentCasingInFileNames": true,
     "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
     "outDir": "./bin"
   }
 }

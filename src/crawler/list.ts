@@ -1,4 +1,3 @@
-import { flatten } from 'fp-ts/lib/Array';
 import { JSDOM } from 'jsdom';
 import { subjectL10nSimpleEntity } from './subject-io.js';
 
@@ -53,7 +52,7 @@ export const fetchSubjectList = async (
         elem.querySelectorAll('tr:not(:first-child)'),
       ),
     )
-    .map((listItems, index) => {
+    .flatMap((listItems, index) => {
       const items = listItems
         .filter((tr) => !!tr.querySelector('td'))
         .map((tr) => {
@@ -100,7 +99,7 @@ export const fetchSubjectList = async (
   return {
     hasNext,
     hasPrevious,
-    items: flatten(items.map(({ items }) => items)),
+    items: items.flatMap(({ items }) => items),
   };
 };
 

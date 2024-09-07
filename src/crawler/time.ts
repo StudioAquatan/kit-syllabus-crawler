@@ -1,5 +1,3 @@
-import { flatten } from 'fp-ts/lib/Array';
-
 export const parseDay = (day: string) => {
   if (day === '') {
     return {
@@ -13,36 +11,31 @@ export const parseDay = (day: string) => {
   }
   return {
     type: 'fixed' as const,
-    days: flatten(
-      day
-        .split(/[,、，]/g)
-        .map((str) => str.trim())
-        .map((str) => {
-          if (str.match(/^([月火水木金土日])(\d)～(\d)$/)) {
-            const date = '月火水木金土日'.indexOf(RegExp.$1);
-            const h1 = Number(RegExp.$2);
-            const h2 = Number(RegExp.$3);
-            return new Array(h2 - h1 + 1).fill(0).map((_v, idx) => ({
+    days: day
+      .split(/[,、，]/g)
+      .map((str) => str.trim())
+      .flatMap((str) => {
+        if (str.match(/^([月火水木金土日])(\d)～(\d)$/)) {
+          const date = '月火水木金土日'.indexOf(RegExp.$1);
+          const h1 = Number(RegExp.$2);
+          const h2 = Number(RegExp.$3);
+          return new Array(h2 - h1 + 1).fill(0).map((_v, idx) => ({
+            date,
+            hour: h1 + idx,
+          }));
+        } else if (str.match(/^([月火水木金土日])(\d)$/)) {
+          const date = '月火水木金土日'.indexOf(RegExp.$1);
+          const hour = Number(RegExp.$2);
+          return [
+            {
               date,
-              hour: h1 + idx,
-            }));
-          } else if (str.match(/^([月火水木金土日])(\d)$/)) {
-            const date = '月火水木金土日'.indexOf(RegExp.$1);
-            const hour = Number(RegExp.$2);
-            return [
-              {
-                date,
-                hour,
-              },
-            ];
-          } else {
-            throw new Error('unknown format of day');
-          }
-        }),
-    ) as Array<{
-      date: number;
-      hour: number;
-    }>,
+              hour,
+            },
+          ];
+        } else {
+          throw new Error('unknown format of day');
+        }
+      }),
   };
 };
 
