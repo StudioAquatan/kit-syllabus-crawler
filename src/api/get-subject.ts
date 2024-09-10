@@ -28,13 +28,14 @@ const HeadersSchema = z.object({
     }),
   'X-Revision': z
     .string()
-    .optional()
+    .default('latest')
     .openapi({
       param: {
         name: 'X-Revision',
         in: 'header',
       },
       description: 'リビジョン指定',
+      default: 'latest',
       example: '20220101',
     }),
 });

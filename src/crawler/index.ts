@@ -50,13 +50,13 @@ export const listWorker = new Worker<{ page: number; indexId: string }>(
           // no more children
           await finalize();
           return;
-        } else {
-          await job.updateData({
-            page: -1,
-            indexId: job.data.indexId,
-          });
-          throw new WaitingChildrenError();
         }
+
+        await job.updateData({
+          page: -1,
+          indexId: job.data.indexId,
+        });
+        throw new WaitingChildrenError();
       }
     } else {
       await finalize();

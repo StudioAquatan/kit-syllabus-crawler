@@ -1,10 +1,10 @@
 import { JSDOM } from 'jsdom';
 import {
-  CategoryObject,
-  ClassPlanObject,
-  GoalObject,
-  SubjectEntity,
-  SubjectL10nEntity,
+  type CategoryObject,
+  type ClassPlanObject,
+  type GoalObject,
+  type SubjectEntity,
+  type SubjectL10nEntity,
   subjectL10nEntity,
 } from './subject-io';
 import { parseDay, parseYear } from './time';
@@ -439,7 +439,7 @@ export const fetchSubject = async (primaryKey: number, fetchImpl = fetch) => {
     attachments,
   };
 
-  if (isNaN(jaEntity.credits ?? 0)) jaEntity.credits = -1;
+  if (Number.isNaN(jaEntity.credits ?? 0)) jaEntity.credits = -1;
 
   const entity: SubjectL10nEntity = {
     ja: jaEntity,

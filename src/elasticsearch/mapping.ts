@@ -21,6 +21,18 @@ const indexSetting: IndicesIndexSettings = {
             'lowercase',
           ],
         },
+        kuromoji_completion_index: {
+          // @ts-expect-error kuromoji_completion
+          mode: 'index',
+          // @ts-expect-error kuromoji_completion
+          type: 'kuromoji_completion',
+        },
+        kuromoji_completion_query: {
+          // @ts-expect-error kuromoji_completion
+          mode: 'query',
+          // @ts-expect-error kuromoji_completion
+          type: 'kuromoji_completion',
+        },
       },
     },
   },
