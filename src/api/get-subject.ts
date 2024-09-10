@@ -1,5 +1,7 @@
-import { createRoute, z, RouteHandler } from '@hono/zod-openapi';
+import { createRoute, z, type RouteHandler } from '@hono/zod-openapi';
+import { ELASTICSEARCH_EN_INDEX, ELASTICSEARCH_JA_INDEX } from '../config';
 import { subjectEntityType } from '../crawler/subject-io';
+import { getDocument } from '../elasticsearch';
 
 const ParamsSchema = z.object({
   id: z.string().openapi({
@@ -23,6 +25,17 @@ const HeadersSchema = z.object({
       },
       description: '言語指定',
       example: 'ja',
+    }),
+  'X-Revision': z
+    .string()
+    .optional()
+    .openapi({
+      param: {
+        name: 'X-Revision',
+        in: 'header',
+      },
+      description: 'リビジョン指定',
+      example: '20220101',
     }),
 });
 
@@ -51,6 +64,18 @@ const route = createRoute({
 });
 
 const handler: RouteHandler<typeof route> = async (c) => {
+  const lang = c.req.header('X-Lang') ?? 'ja';
+  const revision = c.req.header('X-Revision') ?? 'latest';
+  const primaryKey = z.coerce.number().parse(c.req.param('id'));
+
+  const prefix =
+    lang === 'ja' ? ELASTICSEARCH_JA_INDEX : ELASTICSEARCH_EN_INDEX;
+  const document = await getDocument(prefix, revision, primaryKey);
+
+  if (document.found && document._source) {
+    return c.json(document._source);
+  }
+
   return c.notFound();
 };
 

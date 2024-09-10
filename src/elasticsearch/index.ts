@@ -1,5 +1,5 @@
 import { elastic } from '../connection';
-import { SubjectEntity } from '../crawler/subject-io';
+import type { SubjectEntity } from '../crawler/subject-io';
 import { createCreateIndexRequest } from './mapping';
 
 const indexName = (prefix: string, indexId: string) => `${prefix}-${indexId}`;
@@ -35,6 +35,17 @@ export async function addDocument(
     index: indexName(prefix, indexId),
     id,
     body: bodyWithCompletion,
+  });
+}
+
+export async function getDocument(
+  prefix: string,
+  indexId: string,
+  id: string | number,
+) {
+  return elastic.get<SubjectEntityWithCompletion>({
+    index: indexName(prefix, indexId),
+    id: id.toString(),
   });
 }
 
