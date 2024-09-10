@@ -185,7 +185,7 @@ export const subjectEntityType = z
       description: '科目番号',
     }),
     // 単位数
-    credits: z.number().int().optional().openapi({
+    credits: z.number().optional().openapi({
       description: '単位数',
     }),
     // 授業形態
@@ -225,7 +225,7 @@ export const subjectSimpleEntityType = z.strictObject({
   timetableId: z.string(),
   title: z.string(),
   type: z.string(),
-  credits: z.number().int(),
+  credits: z.number(),
   category: z.string().array(),
   class: z.string(),
 });
