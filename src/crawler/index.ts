@@ -30,7 +30,7 @@ export const listWorker = new Worker<{ page: number; indexId: string }>(
     };
 
     if (job.data.page > 0) {
-      const result = await fetchSubjectList(job.data.page, '99');
+      const result = await fetchSubjectList(job.data.page);
       for (const item of result.items) {
         await detailQueue.add(
           'detail',

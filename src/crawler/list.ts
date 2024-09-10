@@ -3,13 +3,9 @@ import { subjectL10nSimpleEntity } from './subject-io.js';
 
 const replaceEmptyText = (str: string) => (str === '-' ? '' : str);
 
-export const fetchSubjectList = async (
-  page: number,
-  sk: string,
-  fetchImpl = fetch,
-) => {
+export const fetchSubjectList = async (page: number, fetchImpl = fetch) => {
   const res = await fetchImpl(
-    `https://www.syllabus.kit.ac.jp/?c=search_list&sk=${sk}&page=${page}`,
+    `https://www.syllabus.kit.ac.jp/?c=search_list&page=${page}`,
   );
 
   if (!res.ok) throw new Error('failed');
@@ -103,9 +99,9 @@ export const fetchSubjectList = async (
   };
 };
 
-export const fetchSubjects = async function* (begin = 1, sk = '99') {
+export const fetchSubjects = async function* (begin = 1) {
   for (let page = begin; ; page++) {
-    const result = await fetchSubjectList(page, sk);
+    const result = await fetchSubjectList(page);
     for (const item of result.items) {
       yield item;
     }
