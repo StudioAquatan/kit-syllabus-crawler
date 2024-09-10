@@ -21,6 +21,22 @@ const indexSetting: IndicesIndexSettings = {
             'lowercase',
           ],
         },
+        reading_form: {
+          type: 'custom',
+          char_filter: ['icu_normalizer'],
+          tokenizer: 'kuromoji_tokenizer_search',
+          filter: [
+            'kuromoji_baseform',
+            'kuromoji_part_of_speech',
+            'cjk_width',
+            'stop',
+            'ja_stop',
+            'kuromoji_stemmer',
+            'kuromoji_no_romaji_readingform',
+            'kana_filter',
+            'lowercase',
+          ],
+        },
         kuromoji_completion_index: {
           // @ts-expect-error kuromoji_completion
           mode: 'index',
@@ -111,6 +127,12 @@ const subjectMapping: MappingTypeMapping['properties'] = {
   },
   title: {
     type: 'text',
+    fields: {
+      reading: {
+        type: 'text',
+        analyzer: 'reading_form',
+      },
+    },
   },
   instructors: {
     type: 'nested',
