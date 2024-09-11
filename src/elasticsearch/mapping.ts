@@ -7,11 +7,28 @@ import type {
 const indexSetting: IndicesIndexSettings = {
   index: {
     analysis: {
+      tokenizer: {
+        kuromoji_tokenizer_search: {
+          type: 'kuromoji_tokenizer',
+          mode: 'extended',
+          discard_punctuation: true,
+        },
+      },
+      filter: {
+        kuromoji_no_romaji_readingform: {
+          type: 'kuromoji_readingform',
+          use_romaji: false,
+        },
+        kana_filter: {
+          type: 'icu_transform',
+          id: 'Katakana-Hiragana',
+        },
+      },
       analyzer: {
         default: {
           type: 'custom',
           char_filter: ['icu_normalizer'],
-          tokenizer: 'kuromoji_tokenizer',
+          tokenizer: 'kuromoji_tokenizer_search',
           filter: [
             'kuromoji_baseform',
             'kuromoji_part_of_speech',
