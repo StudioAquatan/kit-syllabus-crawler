@@ -74,7 +74,8 @@ const handler: RouteHandler<typeof route> = async (c) => {
   const document = await getDocument(prefix, revision, primaryKey);
 
   if (document.found && document._source) {
-    return c.json(document._source);
+    const strippedDocument = subjectEntityType.strip().parse(document._source);
+    return c.json(strippedDocument);
   }
 
   return c.notFound();
