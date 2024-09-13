@@ -1,3 +1,4 @@
+import { SearchRequest } from '@elastic/elasticsearch/lib/api/types';
 import { elastic } from '../connection';
 import type { SubjectEntity } from '../crawler/subject-io';
 import { createCreateIndexRequest } from './mapping';
@@ -67,6 +68,26 @@ export async function getDocument(
   return elastic.get<SubjectEntityWithCompletion>({
     index: indexName(prefix, indexId),
     id: id.toString(),
+  });
+}
+
+export async function search(
+  prefix: string,
+  indexId: string,
+  body: SearchRequest,
+) {
+  const index = indexName(prefix, indexId);
+
+  return elastic.search<SubjectEntityWithCompletion>({
+    ...body,
+    index,
+  });
+}
+
+export async function scroll(scrollId: string) {
+  return elastic.scroll<SubjectEntityWithCompletion>({
+    scroll: '1m',
+    scroll_id: scrollId,
   });
 }
 
