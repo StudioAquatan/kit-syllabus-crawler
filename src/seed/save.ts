@@ -8,13 +8,13 @@ export default async function save(type: 'ja' | 'en', fileName: string) {
     type === 'ja' ? ELASTICSEARCH_JA_INDEX : ELASTICSEARCH_EN_INDEX;
   const indexId = 'latest';
 
-  const jsonLines = [];
+  const jsonLines: string[] = [];
   const searchResponse = await search(prefix, indexId, {
     scroll: '1m',
     size: 1000,
   });
   jsonLines.push(
-    searchResponse.hits.hits.map((hit) => {
+    ...searchResponse.hits.hits.map((hit) => {
       const strippedDocument = subjectEntityType.strip().parse(hit._source);
       return JSON.stringify(strippedDocument);
     }),
@@ -24,13 +24,19 @@ export default async function save(type: 'ja' | 'en', fileName: string) {
   while (scrollId) {
     const scrollResponse = await scroll(scrollId);
     jsonLines.push(
-      scrollResponse.hits.hits.map((hit) => {
+      ...scrollResponse.hits.hits.map((hit) => {
         const strippedDocument = subjectEntityType.strip().parse(hit._source);
         return JSON.stringify(strippedDocument);
       }),
     );
+
+    if (scrollResponse.hits.hits.length === 0) {
+      break;
+    }
     scrollId = searchResponse._scroll_id;
   }
+
+  console.log(`Saving ${jsonLines.length} documents to ${fileName}`);
 
   const json = jsonLines.join('\n');
   await writeFile(fileName, json, { encoding: 'utf-8' });

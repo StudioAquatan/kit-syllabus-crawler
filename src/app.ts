@@ -12,6 +12,8 @@ import { PORT } from './config';
 import { elastic } from './connection';
 import { detailQueue, listQueue } from './crawler';
 
+import save from './seed/save';
+
 (async () => {
   const info = await elastic.info();
   console.log('Elasticsearch version', info.version.number);
@@ -41,6 +43,14 @@ import { detailQueue, listQueue } from './crawler';
   });
 
   app.get('/ui', swaggerUI({ url: '/doc' }));
+
+  if (process.env.NODE_ENV === 'development') {
+    app.post('/seed/save', async (c) => {
+      await save('ja', './data/ja.json');
+      await save('en', './data/en.json');
+      return c.text('Saved');
+    });
+  }
 
   serve({
     fetch: app.fetch,
