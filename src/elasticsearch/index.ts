@@ -21,14 +21,6 @@ export async function ensureIndex(prefix: string, indexId: string) {
 type SubjectEntityWithCompletion = SubjectEntity & {
   completion: {
     input: string[];
-    contexts: {
-      faculty: string[];
-      field: string[];
-      program: string[];
-      category: string[];
-      year: string[];
-      semester: string[];
-    };
   };
 };
 
@@ -38,19 +30,10 @@ export async function addDocument(
   id: string,
   body: SubjectEntity,
 ) {
-  const firstCategory = body.categories[0];
   const bodyWithCompletion: SubjectEntityWithCompletion = {
     ...body,
     completion: {
       input: [body.title, ...body.instructors.map(({ name }) => name)],
-      contexts: {
-        faculty: firstCategory.faculty ? [firstCategory.faculty] : [],
-        field: firstCategory.field ? [firstCategory.field] : [],
-        program: firstCategory.program ? [firstCategory.program] : [],
-        category: firstCategory.category ? [firstCategory.category] : [],
-        year: firstCategory.year.map((year) => year.toString()),
-        semester: [firstCategory.semester],
-      },
     },
   };
   await elastic.index<SubjectEntityWithCompletion>({

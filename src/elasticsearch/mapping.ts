@@ -228,32 +228,6 @@ const subjectMapping: MappingTypeMapping['properties'] = {
     preserve_separators: false,
     preserve_position_increments: true,
     max_input_length: 50,
-    contexts: [
-      {
-        name: 'faculty',
-        type: 'category',
-      },
-      {
-        name: 'field',
-        type: 'category',
-      },
-      {
-        name: 'program',
-        type: 'category',
-      },
-      {
-        name: 'category',
-        type: 'category',
-      },
-      {
-        name: 'year',
-        type: 'category',
-      },
-      {
-        name: 'semester',
-        type: 'category',
-      },
-    ],
   },
 };
 
