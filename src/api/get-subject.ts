@@ -65,9 +65,12 @@ const route = createRoute({
 });
 
 const handler: RouteHandler<typeof route> = async (c) => {
-  const lang = c.req.header('X-Lang') ?? 'ja';
-  const revision = c.req.header('X-Revision') ?? 'latest';
-  const primaryKey = z.coerce.number().parse(c.req.param('id'));
+  const validatedHeader = c.req.valid('header');
+  const lang = validatedHeader['X-Lang'];
+  const revision = validatedHeader['X-Revision'];
+
+  const validatedParam = c.req.valid('param');
+  const primaryKey = validatedParam.id;
 
   const prefix =
     lang === 'ja' ? ELASTICSEARCH_JA_INDEX : ELASTICSEARCH_EN_INDEX;
